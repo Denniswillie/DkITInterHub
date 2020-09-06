@@ -49,6 +49,8 @@ const storeSchema = new mongoose.Schema({
 
 const userSchema = new mongoose.Schema({
   username: String,
+  email: String,
+  password: String,
   googleId: String,
   name: String,
   country: String,
@@ -82,6 +84,7 @@ passport.use(new GoogleStrategy({
   },
   function(accessToken, refreshToken, profile, cb) {
     User.findOrCreate({ googleId: profile.id }, function (err, user) {
+      console.log(profile);
       return cb(err, user);
     });
   }
@@ -115,7 +118,7 @@ app.get('/auth/google/dashboard',
 });
 
 app.post("/register", function(req, res) {
-  User.register({username: req.body.username}, req.body.password, function(err, user) {
+  User.register({username: req.body.username, email: req.body.email}, req.body.password, function(err, user) {
     if (err) {
       console.log(err);
       res.redirect("/register");
