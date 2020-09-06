@@ -1,4 +1,25 @@
 <%- include('partials/header') %>
+<script>
+  window.fbAsyncInit = function() {
+    FB.init({
+      appId      : '647290535901769',
+      cookie     : true,
+      xfbml      : true,
+      version    : 'v8.0'
+    });
+
+    FB.AppEvents.logPageView();
+
+  };
+
+  (function(d, s, id){
+     var js, fjs = d.getElementsByTagName(s)[0];
+     if (d.getElementById(id)) {return;}
+     js = d.createElement(s); js.id = id;
+     js.src = "https://connect.facebook.net/en_US/sdk.js";
+     fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
 
 <div class="container mt-5">
   <h1>Login</h1>
@@ -35,6 +56,16 @@
           <a class="btn btn-block btn-social btn-google" href="/auth/google" role="button">
             <i class="fab fa-google"></i>
             Sign In with Google
+          </a>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-4">
+      <div class="card">
+        <div class="card-body">
+          <a class="btn btn-block btn-social btn-microsoft" href="/auth/outlook" role="button">
+            <i class="fab fa-microsoft"></i>
+            Sign In with Microsoft Outlook
           </a>
         </div>
       </div>
