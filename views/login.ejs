@@ -1,50 +1,36 @@
 <%- include('partials/header') %>
-<script>
-  window.fbAsyncInit = function() {
-    FB.init({
-      appId      : '647290535901769',
-      cookie     : true,
-      xfbml      : true,
-      version    : 'v8.0'
-    });
-
-    FB.AppEvents.logPageView();
-
-  };
-
-  (function(d, s, id){
-     var js, fjs = d.getElementsByTagName(s)[0];
-     if (d.getElementById(id)) {return;}
-     js = d.createElement(s); js.id = id;
-     js.src = "https://connect.facebook.net/en_US/sdk.js";
-     fjs.parentNode.insertBefore(js, fjs);
-   }(document, 'script', 'facebook-jssdk'));
-</script>
-
 <div class="container mt-5">
-  <h1>Login</h1>
+  <h1>InterHub</h1>
 
   <div class="row">
     <div class="col-sm-8">
       <div class="card">
         <div class="card-body">
 
-          <!-- Makes POST request to /login route -->
-          <form action="/login" method="POST">
-            <div class="form-group">
-              <label for="email">Email</label>
-              <input type="email" class="form-control" name="username">
-            </div>
-            <div class="form-group">
-              <label>Username</label>
-              <input type="text" class="form-control" name="username">
-            </div>
-            <div class="form-group">
-              <label for="password">Password</label>
-              <input type="password" class="form-control" name="password">
-            </div>
-            <button type="submit" class="btn btn-dark">Login</button>
-          </form>
+          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit,
+            sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+             Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris
+              nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
+               reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
+                pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
+                culpa qui officia deserunt mollit anim id est laborum.
+          </p><br>
+          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit,
+            sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+             Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris
+              nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
+               reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
+                pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
+                culpa qui officia deserunt mollit anim id est laborum.
+          </p><br>
+          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit,
+            sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+             Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris
+              nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
+               reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
+                pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
+                culpa qui officia deserunt mollit anim id est laborum.
+          </p>
 
         </div>
       </div>
@@ -59,8 +45,6 @@
           </a>
         </div>
       </div>
-    </div>
-    <div class="col-sm-4">
       <div class="card">
         <div class="card-body">
           <a class="btn btn-block btn-social btn-microsoft" href="/auth/outlook" role="button">
@@ -69,7 +53,17 @@
           </a>
         </div>
       </div>
+      <div class="card">
+        <div class="card-body">
+          <a class="btn btn-block btn-social btn-facebook" href="/auth/facebook" role="button">
+            <i class="fab fa-facebook"></i>
+            Sign In with Facebook
+          </a>
+        </div>
+      </div>
     </div>
+
+
 
   </div>
 </div>

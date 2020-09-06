@@ -50,10 +50,9 @@ const storeSchema = new mongoose.Schema({
 });
 
 const userSchema = new mongoose.Schema({
-  username: String,
-  email: String,
-  password: String,
   googleId: String,
+  outlookId: String,
+  facebookId: String,
   name: String,
   country: String,
   rating: ratingSchema,
@@ -112,7 +111,8 @@ passport.use(new OutlookStrategy({
       user.mailboxGuid = profile.MailboxGuid;
     if (profile.Alias)
       user.alias = profile.Alias;
-    User.findOrCreate(user, function (err, user) {
+    User.findOrCreate({ outlookId: profile.id }, function (err, user) {
+      console.log(profile);
       return done(err, user);
     });
   }
@@ -120,12 +120,13 @@ passport.use(new OutlookStrategy({
 
 // Facebook strategy
 passport.use(new FacebookStrategy({
-    clientID: FACEBOOK_APP_ID,
-    clientSecret: FACEBOOK_APP_SECRET,
+    clientID: process.env.FACEBOOK_APP_ID,
+    clientSecret: process.env.FACEBOOK_APP_SECRET,
     callbackURL: "http://localhost:3000/auth/facebook/dashboard"
   },
   function(accessToken, refreshToken, profile, cb) {
     User.findOrCreate({ facebookId: profile.id }, function (err, user) {
+      console.log(profile);
       return cb(err, user);
     });
   }
@@ -178,12 +179,17 @@ app.get("/dashboard", function(req, res) {
   if (req.isAuthenticated()) {
     res.render("dashboard");
   } else {
-    res.redirect("/register");
+    res.redirect("/login");
   }
 });
 
 app.get("/login", function(req, res) {
   res.render("login");
+});
+
+app.get("/logout", function(req, res){
+  req.logout();
+  res.redirect("/");
 });
 
 app.listen(3000, function() {
