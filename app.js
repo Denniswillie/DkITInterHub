@@ -54,7 +54,7 @@ const userSchema = new mongoose.Schema({
   country: String,
   rating: ratingSchema,
   store: storeSchema,
-  phoneNumber: String
+  phoneNumber: String,
 });
 
 userSchema.plugin(passportLocalMongoose);
@@ -125,6 +125,10 @@ app.post("/register", function(req, res) {
       })
     }
   })
+});
+
+app.get("/login", function(req, res) {
+  res.render("login");
 });
 
 app.listen(3000, function() {
