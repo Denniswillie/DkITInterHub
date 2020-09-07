@@ -6,6 +6,7 @@ const ejs = require("ejs");
 const _ = require("lodash");
 const mongoose = require("mongoose");
 const schemas = require("./schemas");
+const authentication = require("./authentication");
 const session = require('express-session');
 const passport = require("passport");
 const passportLocalMongoose = require("passport-local-mongoose");
@@ -21,20 +22,12 @@ app.use(express.static("public"));
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
 
-app.use(session({
-  secret: "d414d0_f1r1c15",
-  resave: false,
-  saveUninitialized: false
-}));
-
-app.use(passport.initialize());
-app.use(passport.session());
+authentication.initializeSession(app);
 
 mongoose.connect("mongodb://localhost:27017/dkitInterHubDB", {useNewUrlParser: true, useUnifiedTopology: true});
 mongoose.set("useCreateIndex", true);
 
-userSchema.plugin(passportLocalMongoose);
-userSchema.plugin(findOrCreate);
+authentication.addPluginsToUserSchema(userSchema);
 
 const User = new mongoose.model("User", userSchema);
 
