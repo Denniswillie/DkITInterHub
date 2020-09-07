@@ -5,6 +5,7 @@ const bodyParser = require("body-parser");
 const ejs = require("ejs");
 const _ = require("lodash");
 const mongoose = require("mongoose");
+const schema = require("./schema");
 const session = require('express-session');
 const passport = require("passport");
 const passportLocalMongoose = require("passport-local-mongoose");
@@ -13,6 +14,7 @@ const OutlookStrategy = require('passport-outlook').Strategy;
 const FacebookStrategy = require('passport-facebook').Strategy;
 const ObjectId = require("mongodb").ObjectID;
 const findOrCreate = require("mongoose-findorcreate");
+const userSchema = schema.userSchema;
 const app = express();
 
 app.use(express.static("public"));
@@ -30,36 +32,6 @@ app.use(passport.session());
 
 mongoose.connect("mongodb://localhost:27017/dkitInterHubDB", {useNewUrlParser: true, useUnifiedTopology: true});
 mongoose.set("useCreateIndex", true);
-
-const ratingSchema = new mongoose.Schema({
-  rate: Number,
-  description: String
-});
-
-const itemSchema = new mongoose.Schema({
-  merchantStoreId: ObjectId,
-  name: String,
-  price: Number,
-  image: String,
-  description: String
-});
-
-const storeSchema = new mongoose.Schema({
-  creatorId: ObjectId,
-  items: [itemSchema]
-});
-
-const userSchema = new mongoose.Schema({
-  username: String,
-  googleId: String,
-  outlookId: String,
-  facebookId: String,
-  name: String,
-  country: String,
-  rating: ratingSchema,
-  store: storeSchema,
-  phoneNumber: String,
-});
 
 userSchema.plugin(passportLocalMongoose);
 userSchema.plugin(findOrCreate);
