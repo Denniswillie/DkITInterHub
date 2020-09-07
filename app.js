@@ -5,7 +5,7 @@ const bodyParser = require("body-parser");
 const ejs = require("ejs");
 const _ = require("lodash");
 const mongoose = require("mongoose");
-const schema = require("./schema");
+const schemas = require("./schemas");
 const session = require('express-session');
 const passport = require("passport");
 const passportLocalMongoose = require("passport-local-mongoose");
@@ -14,7 +14,7 @@ const OutlookStrategy = require('passport-outlook').Strategy;
 const FacebookStrategy = require('passport-facebook').Strategy;
 const ObjectId = require("mongodb").ObjectID;
 const findOrCreate = require("mongoose-findorcreate");
-const userSchema = schema.userSchema;
+const userSchema = schemas.userSchema;
 const app = express();
 
 app.use(express.static("public"));
