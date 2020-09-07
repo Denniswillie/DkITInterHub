@@ -159,7 +159,7 @@ app.get('/auth/outlook',
 app.get('/auth/outlook/dashboard',
   passport.authenticate('windowslive', { failureRedirect: '/login' }),
   function(req, res) {
-    // Successful authentication, redirect home.
+    // Successful authentication, redirect dashboard.
     res.redirect('/dashboard');
   });
 
@@ -169,13 +169,13 @@ app.get('/auth/facebook',
 app.get('/auth/facebook/dashboard',
   passport.authenticate('facebook', { failureRedirect: '/login' }),
   function(req, res) {
-    // Successful authentication, redirect home.
+    // Successful authentication, redirect dashboard.
     res.redirect('/dashboard');
   });
 
 app.get("/dashboard", function(req, res) {
   if (req.isAuthenticated()) {
-    res.render("dashboard");
+    res.render("dashboard", {user: req.user});
   } else {
     res.redirect("/login");
   }
