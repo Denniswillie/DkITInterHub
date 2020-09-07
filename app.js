@@ -50,6 +50,7 @@ const storeSchema = new mongoose.Schema({
 });
 
 const userSchema = new mongoose.Schema({
+  username: String,
   googleId: String,
   outlookId: String,
   facebookId: String,
@@ -85,8 +86,7 @@ passport.use(new GoogleStrategy({
     userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo"
   },
   function(accessToken, refreshToken, profile, cb) {
-    User.findOrCreate({ googleId: profile.id }, function (err, user) {
-      console.log(profile);
+    User.findOrCreate({ googleId: profile.id, name: profile.displayName }, function (err, user) {
       return cb(err, user);
     });
   }
@@ -111,8 +111,7 @@ passport.use(new OutlookStrategy({
       user.mailboxGuid = profile.MailboxGuid;
     if (profile.Alias)
       user.alias = profile.Alias;
-    User.findOrCreate({ outlookId: profile.id }, function (err, user) {
-      console.log(profile);
+    User.findOrCreate({ outlookId: profile.id, name: profile.displayName }, function (err, user) {
       return done(err, user);
     });
   }
@@ -125,8 +124,7 @@ passport.use(new FacebookStrategy({
     callbackURL: "http://localhost:3000/auth/facebook/dashboard"
   },
   function(accessToken, refreshToken, profile, cb) {
-    User.findOrCreate({ facebookId: profile.id }, function (err, user) {
-      console.log(profile);
+    User.findOrCreate({ facebookId: profile.id, name: profile.displayName }, function (err, user) {
       return cb(err, user);
     });
   }
@@ -137,7 +135,7 @@ app.get("/", function(req, res) {
 });
 
 app.get('/auth/google',
-  passport.authenticate('google', { scope: ["profile", "email"] })
+  passport.authenticate('google', { scope: ["profile"] })
 );
 
 app.get('/auth/google/dashboard',
