@@ -2,10 +2,6 @@
 Platform for international students studying at Dundalk Institute of Technology. 
 
 # Get Started
-1. Clone the repository 
-I think you should use an
-`<addr>` element here instead.
-
-
-2. Install MongoDB
-3. Run local server using nodemon. (You have to install nodemon -> npm i nodemon)
+1. Clone the repository `git clone https://github.com/Denniswillie/DkITInterHub.git`
+2. Install Hyper and MongoDB.
+3. Install nodemon.
