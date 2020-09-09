@@ -1,12 +1,11 @@
-const schemas = require("./schemas");
 const session = require('express-session');
-const passport = require("passport");
 const passportLocalMongoose = require("passport-local-mongoose");
 const findOrCreate = require("mongoose-findorcreate");
-const userSchema = schemas.userSchema;
 const StrategiesManager = require("./StrategiesManager");
 
-function initializeSession(app) {
+function Authentication() {};
+
+Authentication.prototype.initializeSession = function(app, passport) {
   app.use(session({
     secret: "d414d0_f1r1c15",
     resave: false,
@@ -17,12 +16,12 @@ function initializeSession(app) {
   app.use(passport.session());
 }
 
-function addPluginsToUserSchema(userSchema) {
+Authentication.prototype.addPluginsToUserSchema = function(userSchema) {
   userSchema.plugin(passportLocalMongoose);
   userSchema.plugin(findOrCreate);
 }
 
-function initiateStrategies(userModel, strategies) {
+Authentication.prototype.initiateStrategies = function(strategies, passport, userModel) {
   passport.use(userModel.createStrategy());
 
   passport.serializeUser(function(user, done) {
@@ -35,7 +34,7 @@ function initiateStrategies(userModel, strategies) {
     });
   });
   strategiesManager = new StrategiesManager(strategies, passport, userModel);
+  strategiesManager.useStrategies();
 }
 
-module.exports.initializeSession = initializeSession;
-module.exports.addPluginsToUserSchema = addPluginsToUserSchema;
+module.exports = Authentication;
