@@ -14,6 +14,7 @@ const StrategiesManager = require("./authentication/StrategiesManager");
 const ObjectId = require("mongodb").ObjectID;
 const findOrCreate = require("mongoose-findorcreate");
 const userSchema = schemas.userSchema;
+const contentSchema = schemas.contentSchema;
 const app = express();
 const port = 3000;
 
@@ -31,7 +32,7 @@ mongoose.connect("mongodb://localhost:27017/dkitInterHubDB", {useNewUrlParser: t
 mongoose.set("useCreateIndex", true);
 
 Authentication.prototype.addPluginsToUserSchema(userSchema);
-
+const Content = new mongoose.model("Content", contentSchema)
 const User = new mongoose.model("User", userSchema);
 
 // Set authentication strategies.
