@@ -28,6 +28,7 @@ app.get("/logout", function(req, res){
   req.logout();
   res.redirect("/");
 });
+
 app.get("/createContent", function(req, res){
   res.render("createContent");
 })
@@ -42,8 +43,19 @@ app.post("/createContent", function(req, res){
       console.log(err);
     }else{
       console.log(theContent);
+      res.redirect("/showContents");
     }
   });
 });
+app.get("/showContents", function(req, res){
+  // Get all contents from DB
+    Content.find({}, function(err, allContents){
+       if(err){
+           console.log(err);
+       } else {
+          res.render("contents",{contents:allContents});
+       }
+    });
+})
 
 module.exports = app;
