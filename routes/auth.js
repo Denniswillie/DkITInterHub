@@ -40,3 +40,4 @@ app.get('/auth/facebook/dashboard',
     // Successful authentication, redirect dashboard.
     res.redirect('/dashboard');
   });
+module.exports = app;
