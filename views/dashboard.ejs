@@ -5,8 +5,13 @@
     <title></title>
   </head>
   <body>
-    <h1>Hi <%=user.name%></h1>
+    <h1>Hi <%= nameOfUser %></h1>
     <h2>This is the dashboard page</h2>
+    <form action = "/userImageProfile" method = "POST">
+      <input type="file" name="userImageProfile">
+      <input type="submit" value="submit">
+    </form>
+    <img src="<%= imageUrl %>" alt="">
     <a class="btn btn-light btn-lg" href="/logout" role="button">Log Out</a>
   </body>
 </html>

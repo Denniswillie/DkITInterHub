@@ -1,5 +1,6 @@
 //jshint esversion:6
 require('dotenv').config();
+const path = require('path');
 const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
@@ -14,6 +15,7 @@ const StrategiesManager = require("./authentication/StrategiesManager");
 const ObjectId = require("mongodb").ObjectID;
 const findOrCreate = require("mongoose-findorcreate");
 const userSchema = schemas.userSchema;
+const {Storage} = require('@google-cloud/storage');
 const app = express();
 const port = 3000;
 
@@ -40,6 +42,11 @@ strategies.push(
 )
 
 Authentication.prototype.initiateStrategies(strategies, passport, User);
+
+const projectId = 'dkitinterhub'
+const keyFilename = './DkitInterHub-18ea7da7837a.json'
+const storage = new Storage({projectId, keyFilename});
+storage.getBuckets().then(x => console.log(x));
 
 app.get('/auth/google',
   passport.authenticate('google', { scope: ["profile"] })
@@ -91,10 +98,15 @@ app.get("/", function(req, res) {
 
 app.get("/dashboard", function(req, res) {
   if (req.isAuthenticated()) {
-    res.render("dashboard", {user: req.user});
+    res.render("dashboard", {nameOfUser: req.user.name, imageUrl: ""});
   } else {
     res.redirect("/");
   }
+});
+
+app.post("/userImageProfile", function(req, res) {
+  const storage = new Storage();
+  storage.getBuckets().then(x => console.log(x));
 });
 
 app.get("/logout", function(req, res){
