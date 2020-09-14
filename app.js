@@ -15,11 +15,14 @@ const StrategiesManager = require("./authentication/StrategiesManager");
 const ObjectId = require("mongodb").ObjectID;
 const findOrCreate = require("mongoose-findorcreate");
 const userSchema = schemas.userSchema;
+const contentSchema = schemas.contentSchema;
 const {Storage} = require('@google-cloud/storage');
 const app = express();
 const port = 3000;
 const multer  = require('multer')
 const upload = multer()
+//full routes on index.js
+const indexRoutes  = require("./routes/index")
 
 app.use(express.static("public"));
 app.set('view engine', 'ejs');
@@ -49,86 +52,7 @@ Authentication.prototype.initiateStrategies(strategies, passport, User);
 const projectId = 'dkitinterhub'
 const keyFilename = './DkitInterHub-18ea7da7837a.json'
 const storage = new Storage({projectId, keyFilename});
-
-app.get('/auth/google',
-  passport.authenticate('google', { scope: ["profile"] })
-);
-
-app.get('/auth/google/dashboard',
-  passport.authenticate('google', { failureRedirect: "/" }),
-  function(req, res) {
-    // Successful authentication, redirect dashboard.
-    res.redirect('/dashboard');
-});
-
-app.get('/auth/outlook',
-  passport.authenticate('windowslive', {
-    scope: [
-      'openid',
-      'profile',
-      'offline_access',
-      'https://outlook.office.com/Mail.Read'
-    ]
-  })
-);
-
-app.get('/auth/outlook/dashboard',
-  passport.authenticate('windowslive', { failureRedirect: '/' }),
-  function(req, res) {
-    // Successful authentication, redirect dashboard.
-    res.redirect('/dashboard');
-  });
-
-app.get('/auth/facebook',
-  passport.authenticate('facebook'));
-
-app.get('/auth/facebook/dashboard',
-  passport.authenticate('facebook', { failureRedirect: '/' }),
-  function(req, res) {
-    // Successful authentication, redirect dashboard.
-    res.redirect('/dashboard');
-  });
-
-// Setup server requests and responses on different routes.
-app.get("/", function(req, res) {
-  if (req.isAuthenticated()) {
-    res.redirect("/dashboard");
-  } else {
-    res.render("login");
-  }
-});
-
-app.get("/dashboard", function(req, res) {
-  if (req.isAuthenticated()) {
-    res.render("dashboard", {nameOfUser: req.user.name, imageUrl: ""});
-  } else {
-    res.redirect("/");
-  }
-});
-
-const options = {
-  destination: 'new-image.png',
-  resumable: true,
-  validation: 'crc32c',
-  metadata: {
-    metadata: {
-      event: 'try to upload image to google cloud storages'
-    }
-  }
-};
-
-app.post("/userImageProfile", upload.single('userImageProfile'), function(req, res) {
-  // const bucket = storage.bucket('first_test_bucket_dkitinterhub');
-  // bucket.upload(req.file, options, function(err, file) {
-  //
-  // });
-  console.log(req.file);
-});
-
-app.get("/logout", function(req, res){
-  req.logout();
-  res.redirect("/");
-});
+app.use(indexRoutes);
 
 app.listen(port, function() {
   console.log("Server started on port " + port);
