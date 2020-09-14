@@ -7,6 +7,12 @@
   <body>
     <h1>Hi <%=user.name%></h1>
     <h2>This is the dashboard page</h2>
+    <h1> list of titles </h1>
+    <% contents.forEach(function(content){ %>
+        <h2> title : <%= content.title %> </h2>
+
+      <% }); %>
+
     <a class="btn btn-light btn-lg" href="/logout" role="button">Log Out</a>
   </body>
 </html>

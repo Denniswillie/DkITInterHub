@@ -17,9 +17,8 @@ const userSchema = schemas.userSchema;
 const contentSchema = schemas.contentSchema;
 const app = express();
 const port = 3000;
-
-var authRoutes    = require("./routes/auth"),
-    indexRoutes   = require("./routes/index")
+//full routes on index.js
+const indexRoutes   = require("./routes/index")
 
 app.use(express.static("public"));
 app.set('view engine', 'ejs');
@@ -32,7 +31,7 @@ mongoose.connect("mongodb://localhost:27017/dkitInterHubDB", {useNewUrlParser: t
 mongoose.set("useCreateIndex", true);
 
 Authentication.prototype.addPluginsToUserSchema(userSchema);
-const Content = new mongoose.model("Content", contentSchema)
+
 const User = new mongoose.model("User", userSchema);
 
 // Set authentication strategies.
@@ -45,8 +44,8 @@ strategies.push(
 
 Authentication.prototype.initiateStrategies(strategies, passport, User);
 
-app.use("/", indexRoutes);
-app.use("/", authRoutes);
+app.use(indexRoutes);
+
 
 
 app.listen(port, function() {
