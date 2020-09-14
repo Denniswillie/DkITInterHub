@@ -35,14 +35,11 @@ const userSchema = new mongoose.Schema({
 
 const contentSchema = new mongoose.Schema({
   creatorId: ObjectId,
-  id:ObjectId,
   type:String,
   title:String,
   content:String,
   image:{ data: Buffer, contentType: String },
   invitation_url: String
-
-
 });
 
 module.exports.ratingSchema = ratingSchema;

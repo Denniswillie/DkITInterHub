@@ -32,7 +32,7 @@ router.get("/dashboard", function(req, res) {
        console.log(err);
      }
      else if (req.isAuthenticated()) {
-       const fileName = req.user._id + ".png";
+       const fileName = req.user._id + ".img";
        const file = bucket.file(fileName);
        createOrUpdateUserProfileImage(req, file)
           .then(res.render("dashboard", {user: req.user, contents:allContents}))
@@ -67,21 +67,13 @@ router.post("/createContent", function(req, res){
     }
   });
 });
-router.get("/showContents", function(req, res){
-  // Get all contents from DB
-})
 
 router.post("/userProfileImage", upload.single('userProfileImage'), function(req, res) {
-  const destination = req.user._id + ".png";
+  const destination = req.user._id + ".img";
   const options = {
     destination: destination,
     resumable: true,
-    validation: 'crc32c',
-    metadata: {
-      metadata: {
-        event: 'test image uploaded to google cloud storage'
-      }
-    }
+    validation: 'crc32c'
   };
 
   bucket.upload(req.file.path, options, function(err, file) {
@@ -97,7 +89,7 @@ async function createOrUpdateUserProfileImage(req, file) {
     expires: '12-31-9999'
   }
   const User = new mongoose.model("User", userSchema);
-  file.getSignedUrl(config, function(err, url) {
+  await file.getSignedUrl(config, function(err, url) {
     if (err) {
       console.error(err);
       return;
