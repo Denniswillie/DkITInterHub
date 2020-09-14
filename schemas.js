@@ -32,7 +32,20 @@ const userSchema = new mongoose.Schema({
   phoneNumber: String,
 });
 
+const contentSchema = new mongoose.Schema({
+  creatorId: ObjectId,
+  id:ObjectId,
+  type:String,
+  title:String,
+  content:String,
+  image:{ data: Buffer, contentType: String },
+  invitation_url: String
+
+
+});
+
 module.exports.ratingSchema = ratingSchema;
 module.exports.itemSchema = itemSchema;
 module.exports.storeSchema = storeSchema;
 module.exports.userSchema = userSchema;
+module.exports.contentSchema= contentSchema;
