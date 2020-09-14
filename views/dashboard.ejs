@@ -1,10 +1,4 @@
-<!DOCTYPE html>
-<html lang="en" dir="ltr">
-  <head>
-    <meta charset="utf-8">
-    <title></title>
-  </head>
-  <body>
+<%- include('partials/header') %>
     <h1>Hi <%= nameOfUser %></h1>
     <h2>This is the dashboard page</h2>
     <form action = "/userImageProfile" method = "POST">
@@ -15,3 +9,4 @@
     <a class="btn btn-light btn-lg" href="/logout" role="button">Log Out</a>
   </body>
 </html>
+<%- include('partials/footer') %>
