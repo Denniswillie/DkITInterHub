@@ -43,10 +43,10 @@ strategies.push(
 
 Authentication.prototype.initiateStrategies(strategies, passport, User);
 
+// Authenticate Google Cloud Storage.
 const projectId = 'dkitinterhub'
 const keyFilename = './DkitInterHub-18ea7da7837a.json'
 const storage = new Storage({projectId, keyFilename});
-storage.getBuckets().then(x => console.log(x));
 
 app.get('/auth/google',
   passport.authenticate('google', { scope: ["profile"] })
@@ -105,8 +105,10 @@ app.get("/dashboard", function(req, res) {
 });
 
 app.post("/userImageProfile", function(req, res) {
-  const storage = new Storage();
-  storage.getBuckets().then(x => console.log(x));
+  const bucket = storage.bucket('first_test_bucket_dkitinterhub');
+  bucket.getFiles(function(err, files) {
+    console.log(files);
+  });
 });
 
 app.get("/logout", function(req, res){
