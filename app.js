@@ -16,11 +16,8 @@ const ObjectId = require("mongodb").ObjectID;
 const findOrCreate = require("mongoose-findorcreate");
 const userSchema = schemas.userSchema;
 const contentSchema = schemas.contentSchema;
-const {Storage} = require('@google-cloud/storage');
 const app = express();
 const port = 3000;
-const multer  = require('multer')
-const upload = multer()
 //full routes on index.js
 const indexRoutes  = require("./routes/index")
 
@@ -33,6 +30,7 @@ Authentication.prototype.initializeSession(app, passport);
 // Set up database connection.
 mongoose.connect("mongodb://localhost:27017/dkitInterHubDB", {useNewUrlParser: true, useUnifiedTopology: true});
 mongoose.set("useCreateIndex", true);
+mongoose.set('useFindAndModify', false);
 
 Authentication.prototype.addPluginsToUserSchema(userSchema);
 
@@ -48,10 +46,6 @@ strategies.push(
 
 Authentication.prototype.initiateStrategies(strategies, passport, User);
 
-// Authenticate Google Cloud Storage.
-const projectId = 'dkitinterhub'
-const keyFilename = './DkitInterHub-18ea7da7837a.json'
-const storage = new Storage({projectId, keyFilename});
 app.use(indexRoutes);
 
 app.listen(port, function() {

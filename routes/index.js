@@ -5,7 +5,17 @@ const passport = require("passport");
 const schemas = require("../schemas");
 const contentSchema = schemas.contentSchema;
 const ContentCard = new mongoose.model("ContentCard", contentSchema);
+const userSchema = schemas.userSchema;
 const authRoutes = require("../routes/auth");
+const {Storage} = require('@google-cloud/storage');
+const multer  = require('multer')
+const upload = multer({ dest: '../userProfileImage' });
+
+// Authenticate google cloud storage client and create bucket.
+const projectId = 'dkitinterhub'
+const keyFilename = './DkitInterHub-18ea7da7837a.json'
+const storage = new Storage({projectId, keyFilename});
+const bucket = storage.bucket('first_test_bucket_dkitinterhub');
 
 // Setup server requests and responses on different routes.
 router.get("/", function(req, res) {
@@ -55,8 +65,44 @@ router.post("/createContent", function(req, res){
 });
 router.get("/showContents", function(req, res){
   // Get all contents from DB
-
 })
+
+router.post("/userProfileImage", upload.single('userProfileImage'), function(req, res) {
+  const destination = req.user._id + ".png";
+  const options = {
+    destination: destination,
+    resumable: true,
+    validation: 'crc32c',
+    metadata: {
+      metadata: {
+        event: 'test image uploaded to google cloud storage'
+      }
+    }
+  };
+
+  const config = {
+    action: "read",
+    expires: '03-17-2025'
+  }
+
+  bucket.upload(req.file.path, options, function(err, file) {
+    const User = new mongoose.model("User", userSchema);
+    file.getSignedUrl(config, function(err, url) {
+      if (err) {
+        console.error(err);
+        return;
+      }
+      User.findOneAndUpdate({_id: req.user._id}, {imageUrl: url}, function(err, foundUser) {
+        if (err) {
+          console.log(err);
+          return;
+        } else {
+          res.redirect("/");
+        }
+      });
+    });
+  });
+});
 
 router.use("/auth", authRoutes);
 
