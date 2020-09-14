@@ -5,7 +5,7 @@ const passport = require("passport");
 const schemas = require("../schemas");
 const contentSchema = schemas.contentSchema;
 const ContentCard = new mongoose.model("ContentCard", contentSchema);
-const authRoutes    = require("../routes/auth");
+const authRoutes = require("../routes/auth");
 
 // Setup server requests and responses on different routes.
 router.get("/", function(req, res) {
