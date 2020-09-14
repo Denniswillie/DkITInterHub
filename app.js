@@ -18,6 +18,8 @@ const userSchema = schemas.userSchema;
 const {Storage} = require('@google-cloud/storage');
 const app = express();
 const port = 3000;
+const multer  = require('multer')
+const upload = multer()
 
 app.use(express.static("public"));
 app.set('view engine', 'ejs');
@@ -104,11 +106,23 @@ app.get("/dashboard", function(req, res) {
   }
 });
 
-app.post("/userImageProfile", function(req, res) {
-  const bucket = storage.bucket('first_test_bucket_dkitinterhub');
-  bucket.getFiles(function(err, files) {
-    console.log(files);
-  });
+const options = {
+  destination: 'new-image.png',
+  resumable: true,
+  validation: 'crc32c',
+  metadata: {
+    metadata: {
+      event: 'try to upload image to google cloud storages'
+    }
+  }
+};
+
+app.post("/userImageProfile", upload.single('userImageProfile'), function(req, res) {
+  // const bucket = storage.bucket('first_test_bucket_dkitinterhub');
+  // bucket.upload(req.file, options, function(err, file) {
+  //
+  // });
+  console.log(req.file);
 });
 
 app.get("/logout", function(req, res){

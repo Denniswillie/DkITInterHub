@@ -15,6 +15,7 @@
     "ejs": "^3.1.5",
     "express": "^4.17.1",
     "express-session": "^1.17.1",
+    "fast-crc32c": "^2.0.0",
     "lodash": "^4.17.20",
     "mongodb": "^3.6.1",
     "mongoose": "^5.10.3",
