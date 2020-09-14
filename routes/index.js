@@ -82,7 +82,7 @@ router.post("/userProfileImage", upload.single('userProfileImage'), function(req
 
   const config = {
     action: "read",
-    expires: '03-17-2025'
+    expires: '31-12-9999'
   }
 
   bucket.upload(req.file.path, options, function(err, file) {
