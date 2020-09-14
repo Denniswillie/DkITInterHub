@@ -80,29 +80,32 @@ router.post("/userProfileImage", upload.single('userProfileImage'), function(req
     }
   };
 
-  const config = {
-    action: "read",
-    expires: '31-12-9999'
-  }
-
   bucket.upload(req.file.path, options, function(err, file) {
-    const User = new mongoose.model("User", userSchema);
-    file.getSignedUrl(config, function(err, url) {
-      if (err) {
-        console.error(err);
-        return;
-      }
-      User.findOneAndUpdate({_id: req.user._id}, {imageUrl: url}, function(err, foundUser) {
-        if (err) {
-          console.log(err);
-          return;
-        } else {
-          res.redirect("/");
-        }
-      });
-    });
+    createOrUpdateUserProfileImage(req, res, file);
   });
 });
+
+function createOrUpdateUserProfileImage(req, res, file) {
+  const config = {
+    action: "read",
+    expires: '12-31-9999'
+  }
+  const User = new mongoose.model("User", userSchema);
+  file.getSignedUrl(config, function(err, url) {
+    if (err) {
+      console.error(err);
+      return;
+    }
+    User.findOneAndUpdate({_id: req.user._id}, {imageUrl: url}, function(err, foundUser) {
+      if (err) {
+        console.log(err);
+        return;
+      } else {
+        res.redirect("/");
+      }
+    });
+  });
+}
 
 router.use("/auth", authRoutes);
 
