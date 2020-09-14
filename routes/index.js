@@ -29,10 +29,14 @@ router.get("/", function(req, res) {
 router.get("/dashboard", function(req, res) {
   ContentCard.find({}, function(err, allContents){
      if(err){
-         console.log(err);
+       console.log(err);
      }
      else if (req.isAuthenticated()) {
-       res.render("dashboard", {user: req.user, contents:allContents});
+       const fileName = req.user._id + ".png";
+       const file = bucket.file(fileName);
+       createOrUpdateUserProfileImage(req, file)
+          .then(res.render("dashboard", {user: req.user, contents:allContents}))
+          .catch((err) => console.log(err));
      }
      else {
        res.redirect("/");
@@ -81,11 +85,13 @@ router.post("/userProfileImage", upload.single('userProfileImage'), function(req
   };
 
   bucket.upload(req.file.path, options, function(err, file) {
-    createOrUpdateUserProfileImage(req, res, file);
+    createOrUpdateUserProfileImage(req, file)
+        .then(res.redirect("/"))
+        .catch((err) => console.log(err));
   });
 });
 
-function createOrUpdateUserProfileImage(req, res, file) {
+async function createOrUpdateUserProfileImage(req, file) {
   const config = {
     action: "read",
     expires: '12-31-9999'
@@ -100,8 +106,6 @@ function createOrUpdateUserProfileImage(req, res, file) {
       if (err) {
         console.log(err);
         return;
-      } else {
-        res.redirect("/");
       }
     });
   });
