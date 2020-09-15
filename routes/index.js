@@ -6,6 +6,8 @@ const schemas = require("../schemas");
 const contentSchema = schemas.contentSchema;
 const ContentCard = new mongoose.model("ContentCard", contentSchema);
 const userSchema = schemas.userSchema;
+const roomSchema = schemas.roomSchema;
+const Room = new mongoose.model("Room", roomSchema);
 const authRoutes = require("../routes/auth");
 const {Storage} = require('@google-cloud/storage');
 const multer  = require('multer')
@@ -103,6 +105,42 @@ async function createOrUpdateUserProfileImage(req, file) {
   });
 }
 
+router.get("/userProfileInput", function(req, res) {
+  res.render("userProfileInput");
+});
+
+router.post("/usernameAvailabilityChecker", function(req, res) {
+  const username = req.body.username;
+  const User = new mongoose.model("User", userSchema);
+  User.find({username: { $regex: username, $options: "i" }}, function(err, foundUser) {
+    if (err) {
+      console.log(err);
+      return;
+    }
+    else if (foundUser.length == 0) {
+      res.send("Username is available!");
+    }
+    else {
+      res.send("Username not available!");
+    }
+  });
+});
+
+router.post("/userProfileInput", function(req, res) {
+  const username = req.body.username;
+  const country = req.body.country;
+  const course = req.body.course;
+  const User = new mongoose.model("User", userSchema);
+  User.findOneAndUpdate({_id: req.user._id}, {username: username, country: country, course: course}, function(err, foundUser) {
+    if (err) {
+      console.log(err);
+      return;
+    } else {
+      res.redirect("/dashboard");
+    }
+  });
+});
+
 router.get("/createRoom", function(req, res) {
   res.render("createRoom");
 });
@@ -110,13 +148,18 @@ router.get("/createRoom", function(req, res) {
 router.post("/existingUsers", function(req, res) {
   const User = new mongoose.model("User", userSchema);
   const startingLettersRegex = "^" + req.body.inputElement;
-  User.find({name: {$regex: startingLettersRegex}}, function(err, foundUsers) {
+  User.find({username: {$regex: startingLettersRegex}}, function(err, foundUsers) {
     if (err) {
       console.log(err);
     } else {
       res.send(foundUsers);
     }
-  });
+  })
+  .limit(5);
+});
+
+router.post("/createRoom", function(req, res) {
+
 });
 
 router.use("/auth", authRoutes);

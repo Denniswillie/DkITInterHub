@@ -1,21 +1,23 @@
 <%- include('partials/header') %>
 
-    <form action="/createContent" method="POST">
+    <form action="/createRoom" onsubmit = "sendPostRequest">
       <div class="form-group">
         <label for="exampleInputEmail1">Room name: </label>
-        <input name="roomName" type="text" class="form-control" id="name" aria-describedby="emailHelp" placeholder="Enter room name" required>
+        <input name="roomName" type="text" class="form-control" id="name" aria-describedby="emailHelp" placeholder="Enter room name" autocomplete="off" required>
       </div>
 
       <div class="form-group">
         <label for="exampleInputEmail1">Description: </label>
-        <input name="roomDescription" type="text" class="form-control" id="description" aria-describedby="emailHelp" placeholder="Enter room description" required>
+        <input name="roomDescription" type="text" class="form-control" id="description" aria-describedby="emailHelp" placeholder="Enter room description" autocomplete="off" required>
       </div>
 
       <div class="form-group">
         <label for="inviteFriends">Invite friends: </label>
-        <input name="content" type="text" class="form-control" id="inviteFriends" aria-describedby="emailHelp" placeholder="Enter content">
+        <input name="inviteFriends" type="text" class="form-control" id="inviteFriends" aria-describedby="emailHelp" placeholder="Enter content" autocomplete="off">
       </div>
 
+      <div id="existingUsers"></div>
+      <div id="selectedFriends" style = "display: none; visibility: hidden;"></div>
       <button type="submit" class="btn btn-primary">Submit</button>
     </form>
     <script>
@@ -24,7 +26,21 @@
         bodyParams.append("inputElement", this.value);
         fetch("/existingUsers", {method: 'POST', body: bodyParams})
             .then((response) => response.json())
-            .then((existingUsers) => console.log(existingUsers));
+            .then((existingUsers) => {
+              const existingUsersDiv = document.getElementById("existingUsers");
+              existingUsers.forEach(function(existingUser) {
+                const existingUserDiv = document.createElement("div");
+                existingUserDiv.innerText = existingUser.username;
+                existingUserDiv.addEventListener("click", function(req, res) {
+                  const selectedFriend = document.createElement("input");
+                  selectedFriend.setAttribute("type", "text");
+                  selectedFriend.setAttribute("value", existingUser._id);
+                  selectedFriend.setAttribute("name", "selectedFriends[]");
+                  document.getElementById(selectedFriends).appendChild(selectedFriend);
+                });
+                existingUsersDiv.appendChild(existingUserDiv);
+              });
+            });
       });
     </script>
 

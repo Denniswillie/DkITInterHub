@@ -31,7 +31,8 @@ const userSchema = new mongoose.Schema({
   store: storeSchema,
   phoneNumber: String,
   imageUrl: String,
-  course: String
+  course: String,
+  invitations: String
 });
 
 const contentSchema = new mongoose.Schema({
@@ -47,6 +48,7 @@ const roomSchema = new mongoose.Schema({
   creatorId: ObjectId,
   name: String,
   description: String,
+  pendingListOfStudents: [userSchema],
   listOfStudents: [userSchema],
   listOfContentCards: [contentSchema]
 });
