@@ -5,8 +5,17 @@ const passport = require("passport");
 const schemas = require("../schemas");
 const contentSchema = schemas.contentSchema;
 const ContentCard = new mongoose.model("ContentCard", contentSchema);
-const authRoutes    = require("../routes/auth");
+const userSchema = schemas.userSchema;
+const authRoutes = require("../routes/auth");
+const {Storage} = require('@google-cloud/storage');
+const multer  = require('multer')
+const upload = multer({ dest: '../userProfileImage' });
 
+// Authenticate google cloud storage client and create bucket.
+const projectId = 'dkitinterhub'
+const keyFilename = './DkitInterHub-18ea7da7837a.json'
+const storage = new Storage({projectId, keyFilename});
+const bucket = storage.bucket('first_test_bucket_dkitinterhub');
 
 // Setup server requests and responses on different routes.
 router.get("/", function(req, res) {
@@ -20,18 +29,19 @@ router.get("/", function(req, res) {
 router.get("/dashboard", function(req, res) {
   ContentCard.find({}, function(err, allContents){
      if(err){
-         console.log(err);
-     } else {
-
-       if (req.isAuthenticated()) {
-         res.render("dashboard", {user: req.user, contents:allContents});
-       } else {
-         res.redirect("/");
-       }
-
+       console.log(err);
+     }
+     else if (req.isAuthenticated()) {
+       const fileName = req.user._id + ".img";
+       const file = bucket.file(fileName);
+       createOrUpdateUserProfileImage(req, file)
+          .then(res.render("dashboard", {user: req.user, contents:allContents}))
+          .catch((err) => console.log(err));
+     }
+     else {
+       res.redirect("/");
      }
   });
-
 });
 
 router.get("/logout", function(req, res){
@@ -57,10 +67,41 @@ router.post("/createContent", function(req, res){
     }
   });
 });
-router.get("/showContents", function(req, res){
-  // Get all contents from DB
 
-})
+router.post("/userProfileImage", upload.single('userProfileImage'), function(req, res) {
+  const destination = req.user._id + ".img";
+  const options = {
+    destination: destination,
+    resumable: true,
+    validation: 'crc32c'
+  };
+
+  bucket.upload(req.file.path, options, function(err, file) {
+    createOrUpdateUserProfileImage(req, file)
+        .then(res.redirect("/"))
+        .catch((err) => console.log(err));
+  });
+});
+
+async function createOrUpdateUserProfileImage(req, file) {
+  const config = {
+    action: "read",
+    expires: '12-31-9999'
+  }
+  const User = new mongoose.model("User", userSchema);
+  await file.getSignedUrl(config, function(err, url) {
+    if (err) {
+      console.error(err);
+      return;
+    }
+    User.findOneAndUpdate({_id: req.user._id}, {imageUrl: url}, function(err, foundUser) {
+      if (err) {
+        console.log(err);
+        return;
+      }
+    });
+  });
+}
 
 router.use("/auth", authRoutes);
 

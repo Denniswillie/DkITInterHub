@@ -1,18 +1,14 @@
-<!DOCTYPE html>
-<html lang="en" dir="ltr">
-  <head>
-    <meta charset="utf-8">
-    <title></title>
-  </head>
-  <body>
-    <h1>Hi <%=user.name%></h1>
+<%- include('partials/header') %>
+    <h1>Hi <%= user.name %></h1>
+    <form action="/userProfileImage" method="post" enctype="multipart/form-data">
+      <input type="file" name="userProfileImage">
+      <input type="submit" value="submit">
+    </form>
+    <img src="<%= user.imageUrl %>" alt="">
     <h2>This is the dashboard page</h2>
     <h1> list of titles </h1>
     <% contents.forEach(function(content){ %>
         <h2> title : <%= content.title %> </h2>
-
-      <% }); %>
-
+    <% }); %>
     <a class="btn btn-light btn-lg" href="/logout" role="button">Log Out</a>
-  </body>
-</html>
+<%- include('partials/footer') %>
