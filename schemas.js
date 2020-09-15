@@ -42,8 +42,16 @@ const contentSchema = new mongoose.Schema({
   invitation_url: String
 });
 
+const roomSchema = new mongoose.Schema({
+  creatorId: ObjectId,
+  name: String,
+  listOfStudents: [userSchema],
+  listOfContentCards: [contentSchema]
+});
+
 module.exports.ratingSchema = ratingSchema;
 module.exports.itemSchema = itemSchema;
 module.exports.storeSchema = storeSchema;
 module.exports.userSchema = userSchema;
 module.exports.contentSchema= contentSchema;
+module.exports.roomSchema = roomSchema;
