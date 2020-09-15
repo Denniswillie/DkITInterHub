@@ -27,21 +27,21 @@ router.get("/", function(req, res) {
 });
 
 router.get("/dashboard", function(req, res) {
-  ContentCard.find({}, function(err, allContents){
-     if(err){
-       console.log(err);
-     }
-     else if (req.isAuthenticated()) {
-       const fileName = req.user._id + ".img";
-       const file = bucket.file(fileName);
-       createOrUpdateUserProfileImage(req, file)
-          .then(res.render("dashboard", {user: req.user, contents:allContents}))
-          .catch((err) => console.log(err));
-     }
-     else {
-       res.redirect("/");
-     }
-  });
+  if (req.isAuthenticated()) {
+    if (req.user.username == undefined) {
+      res.redirect("/userProfileInput");
+    } else {
+      ContentCard.find({}, function(err, allContents) {
+        const fileName = req.user._id + ".img";
+        const file = bucket.file(fileName);
+        createOrUpdateUserProfileImage(req, file)
+           .then(res.render("dashboard", {user: req.user, contents:allContents}))
+           .catch((err) => console.log(err));
+      });
+    }
+  } else {
+    res.redirect("/");
+  }
 });
 
 router.get("/logout", function(req, res){
