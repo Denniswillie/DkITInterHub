@@ -30,7 +30,8 @@ const userSchema = new mongoose.Schema({
   rating: ratingSchema,
   store: storeSchema,
   phoneNumber: String,
-  imageUrl: String
+  imageUrl: String,
+  course: String
 });
 
 const contentSchema = new mongoose.Schema({
