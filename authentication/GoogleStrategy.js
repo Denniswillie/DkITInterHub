@@ -16,6 +16,7 @@ function useStrategy(passport, userModel) {
       }, function(err, user) {
         return cb(err, user);
       });
+      console.log(profile);
     }
   ));
 }

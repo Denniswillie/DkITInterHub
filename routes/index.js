@@ -103,6 +103,22 @@ async function createOrUpdateUserProfileImage(req, file) {
   });
 }
 
+router.get("/createRoom", function(req, res) {
+  res.render("createRoom");
+});
+
+router.post("/existingUsers", function(req, res) {
+  const User = new mongoose.model("User", userSchema);
+  const startingLettersRegex = "^" + req.body.inputElement;
+  User.find({name: {$regex: startingLettersRegex}}, function(err, foundUsers) {
+    if (err) {
+      console.log(err);
+    } else {
+      res.send(foundUsers);
+    }
+  });
+});
+
 router.use("/auth", authRoutes);
 
 module.exports = router;

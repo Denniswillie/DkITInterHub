@@ -45,6 +45,7 @@ const contentSchema = new mongoose.Schema({
 const roomSchema = new mongoose.Schema({
   creatorId: ObjectId,
   name: String,
+  description: String,
   listOfStudents: [userSchema],
   listOfContentCards: [contentSchema]
 });
