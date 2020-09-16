@@ -142,13 +142,22 @@ router.post("/userProfileInput", function(req, res) {
 });
 
 router.get("/createRoom", function(req, res) {
-  res.render("createRoom");
+  if (req.isAuthenticated()) {
+    res.render("createRoom");
+  } else {
+    res.redirect("/");
+  }
 });
 
 router.post("/existingUsers", function(req, res) {
   const User = new mongoose.model("User", userSchema);
   const startingLettersRegex = "^" + req.body.inputElement;
-  User.find({$and: [{username: {$regex: startingLettersRegex, $options: "i"}}, {username: {$not: {$eq: req.user.username}}}]}, function(err, foundUsers) {
+  User.find({
+    $and: [
+      {username: {$regex: startingLettersRegex, $options: "i"}},
+      {username: {$not: {$eq: req.user.username}}}
+    ]
+  }, function(err, foundUsers) {
     if (err) {
       console.log(err);
     } else {
