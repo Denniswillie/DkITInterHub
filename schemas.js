@@ -32,7 +32,7 @@ const userSchema = new mongoose.Schema({
   phoneNumber: String,
   imageUrl: String,
   course: String,
-  invitations: String
+  invitations: [String]
 });
 
 const contentSchema = new mongoose.Schema({

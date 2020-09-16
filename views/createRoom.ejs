@@ -17,30 +17,40 @@
       </div>
 
       <div id="existingUsers"></div>
-      <div id="selectedFriends" style = "display: none; visibility: hidden;"></div>
+      <div id="selectedFriends"></div>
       <button type="submit" class="btn btn-primary">Submit</button>
     </form>
     <script>
       document.getElementById("inviteFriends").addEventListener("input", function(e) {
-        const bodyParams = new URLSearchParams();
-        bodyParams.append("inputElement", this.value);
-        fetch("/existingUsers", {method: 'POST', body: bodyParams})
-            .then((response) => response.json())
-            .then((existingUsers) => {
-              const existingUsersDiv = document.getElementById("existingUsers");
-              existingUsers.forEach(function(existingUser) {
-                const existingUserDiv = document.createElement("div");
-                existingUserDiv.innerText = existingUser.username;
-                existingUserDiv.addEventListener("click", function(req, res) {
-                  const selectedFriend = document.createElement("input");
-                  selectedFriend.setAttribute("type", "text");
-                  selectedFriend.setAttribute("value", existingUser._id);
-                  selectedFriend.setAttribute("name", "selectedFriends[]");
-                  document.getElementById(selectedFriends).appendChild(selectedFriend);
+        if (this.value.length > 0) {
+          const bodyParams = new URLSearchParams();
+          bodyParams.append("inputElement", this.value);
+          fetch("/existingUsers", {method: 'POST', body: bodyParams})
+              .then((response) => response.json())
+              .then((existingUsers) => {
+                const existingUsersDiv = document.getElementById("existingUsers");
+                while (existingUsersDiv.firstChild) {
+                  existingUsersDiv.removeChild(existingUsersDiv.lastChild);
+                };
+                existingUsers.forEach(function(existingUser) {
+                  const existingUserDiv = document.createElement("div");
+                  existingUserDiv.innerText = existingUser.username;
+                  existingUserDiv.addEventListener("click", function(req, res) {
+                    const selectedFriend = document.createElement("input");
+                    selectedFriend.setAttribute("type", "text");
+                    selectedFriend.setAttribute("value", existingUser._id);
+                    selectedFriend.setAttribute("name", "selectedFriends[]");
+                    document.getElementById("selectedFriends").appendChild(selectedFriend);
+                  });
+                  existingUsersDiv.appendChild(existingUserDiv);
                 });
-                existingUsersDiv.appendChild(existingUserDiv);
               });
-            });
+        } else {
+          const existingUsersDiv = document.getElementById("existingUsers");
+          while (existingUsersDiv.firstChild) {
+            existingUsersDiv.removeChild(existingUsersDiv.lastChild);
+          };
+        }
       });
     </script>
 
