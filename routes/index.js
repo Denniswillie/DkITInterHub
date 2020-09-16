@@ -133,7 +133,7 @@ router.post("/usernameAvailabilityChecker", function(req, res) {
   const User = new mongoose.model("User", userSchema);
   User.find({
     username: {
-      $regex: username,
+      $regex: "^" + username + "$",
       $options: "i"
     }
   }, function(err, foundUser) {

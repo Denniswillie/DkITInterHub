@@ -10,6 +10,7 @@
   <input id = "submit" type="submit" value="submit" disabled>
 </form>
 <script>
+  const USERNAME_IS_AVAILABLE = "Username is available!";
   const usernameInput = document.getElementById("usernameInput");
   usernameInput.addEventListener("input", function(e) {
     if (usernameInput.value.length >= 6) {
@@ -19,7 +20,7 @@
           .then((response) => response.text())
           .then((userNameStatus) => {
             document.getElementById("userNameStatus").value = userNameStatus;
-            if (userNameStatus == "Username is available!") {
+            if (userNameStatus == USERNAME_IS_AVAILABLE) {
               document.getElementById("submit").disabled = false;
             } else {
               document.getElementById("submit").disabled = true;

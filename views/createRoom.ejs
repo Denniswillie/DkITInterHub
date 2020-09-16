@@ -3,8 +3,10 @@
     <form action="/createRoom" onsubmit = "sendPostRequest">
       <div class="form-group">
         <label for="exampleInputEmail1">Room name: </label>
-        <input name="roomName" type="text" class="form-control" id="name" aria-describedby="emailHelp" placeholder="Enter room name" autocomplete="off" required>
+        <input name="roomName" type="text" class="form-control" id="roomnameInput" aria-describedby="emailHelp" placeholder="Enter room name" autocomplete="off" required>
       </div>
+
+      <input type="text" id = "roomnameStatus" autocomplete="off" readonly><br>
 
       <div class="form-group">
         <label for="exampleInputEmail1">Description: </label>
@@ -21,20 +23,42 @@
       <button type="submit" class="btn btn-primary">Submit</button>
     </form>
     <script>
-      document.getElementById("inviteFriends").addEventListener("input", function(e) {
-        if (this.value.length > 0) {
+      const ROOMNAME_IS_AVAILABLE = "Room name is available!";
+      const roomnameInput = document.getElementById("roomnameInput");
+      roomnameInput.addEventListener("input", function(e) {
+        if (roomnameInput.value.length > 0) {
           const bodyParams = new URLSearchParams();
-          bodyParams.append("inputElement", this.value);
+          bodyParams.append("roomname", roomnameInput.value);
+          fetch("/roomnameAvailabilityChecker", {method: 'POST', body: bodyParams})
+              .then((response) => response.text())
+              .then((roomnameStatus) => {
+                document.getElementById("roomnameStatus").value = userNameStatus;
+                if (roomnameStatus == ROOMNAME_IS_AVAILABLE) {
+                  document.getElementById("submit").disabled = false;
+                } else {
+                  document.getElementById("submit").disabled = true;
+                }
+              });
+        } else {
+          document.getElementById("submit").disabled = true;
+        }
+      });
+
+      document.getElementById("inviteFriends").addEventListener("input", function(e) {
+        const inputValue = this.value;
+        const inputLength = inputValue.length;
+        if (inputLength > 0) {
+          const bodyParams = new URLSearchParams();
+          bodyParams.append("inputElement", inputValue);
           fetch("/existingUsers", {method: 'POST', body: bodyParams})
               .then((response) => response.json())
               .then((existingUsers) => {
                 const existingUsersDiv = document.getElementById("existingUsers");
-                while (existingUsersDiv.firstChild) {
-                  existingUsersDiv.removeChild(existingUsersDiv.lastChild);
-                };
+                removeAllChildElements(existingUsersDiv);
                 existingUsers.forEach(function(existingUser) {
                   const existingUserDiv = document.createElement("div");
-                  existingUserDiv.innerText = existingUser.username;
+                  existingUserDiv.innerHTML =
+                      "<b>" + existingUser.username.substring(0, inputLength) + "</b>" + existingUser.username.substring(inputLength);
                   existingUserDiv.addEventListener("click", function(req, res) {
                     const selectedFriend = document.createElement("input");
                     selectedFriend.setAttribute("type", "text");
@@ -46,12 +70,15 @@
                 });
               });
         } else {
-          const existingUsersDiv = document.getElementById("existingUsers");
-          while (existingUsersDiv.firstChild) {
-            existingUsersDiv.removeChild(existingUsersDiv.lastChild);
-          };
+          removeAllChildElements(document.getElementById("existingUsers"));
         }
       });
+
+      function removeAllChildElements(parentDiv) {
+        while (parentDiv.firstChild) {
+          parentDiv.removeChild(parentDiv.lastChild);
+        };
+      }
     </script>
 
 <%- include('partials/footer') %>
