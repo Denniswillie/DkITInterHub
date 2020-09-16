@@ -5,6 +5,8 @@ const passport = require("passport");
 const schemas = require("../schemas");
 const contentSchema = schemas.contentSchema;
 const ContentCard = new mongoose.model("ContentCard", contentSchema);
+const commentSchema = schemas.commentSchema;
+const Comment = new mongoose.model("Comment", commentSchema);
 const userSchema = schemas.userSchema;
 const authRoutes = require("../routes/auth");
 const {Storage} = require('@google-cloud/storage');
@@ -13,10 +15,37 @@ const upload = multer({ dest: '../userProfileImage' });
 
 // Authenticate google cloud storage client and create bucket.
 const projectId = 'dkitinterhub'
-const keyFilename = './DkitInterHub-18ea7da7837a.json'
+const keyFilename = '../DkitInterHub-18ea7da7837a.json'
 const storage = new Storage({projectId, keyFilename});
 const bucket = storage.bucket('first_test_bucket_dkitinterhub');
+// function for interval e.g: 4 minutes ago
+function timeSince(date) {
 
+  var seconds = Math.floor((new Date() - date) / 1000);
+
+  var interval = Math.floor(seconds / 31536000);
+
+  if (interval > 1) {
+    return interval + " years ago";
+  }
+  interval = Math.floor(seconds / 2592000);
+  if (interval > 1) {
+    return interval + " months ago";
+  }
+  interval = Math.floor(seconds / 86400);
+  if (interval > 1) {
+    return interval + " days ago";
+  }
+  interval = Math.floor(seconds / 3600);
+  if (interval > 1) {
+    return interval + " hours ago";
+  }
+  interval = Math.floor(seconds / 60);
+  if (interval > 1) {
+    return interval + " minutes ago";
+  }
+  return Math.floor(seconds) + " seconds ago";
+}
 // Setup server requests and responses on different routes.
 router.get("/", function(req, res) {
   if (req.isAuthenticated()) {
@@ -48,6 +77,27 @@ router.get("/logout", function(req, res){
   req.logout();
   res.redirect("/");
 });
+
+router.post("/:id/createComment", function(req, res){
+  ContentCard.findById(req.params.id, function(err, foundContent){
+    var creatorId = req.user._id;
+    var content = req.body.content;
+    var dateCreated = new Date();
+    var interval = timeSince(dateCreated);
+    Comment.create({creatorId:creatorId, content:content, dateCreated:dateCreated, interval:interval}, function(err, foundComment){
+      if(err){
+        console.log(err);
+      }else{
+        console.log(foundComment);
+        foundContent.comments.push(foundComment);
+        foundContent.save();
+        res.redirect("/dashboard");
+      }
+    });
+  });
+});
+
+
 
 router.get("/createContent", function(req, res){
   res.render("createContent");

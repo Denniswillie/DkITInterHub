@@ -33,17 +33,28 @@ const userSchema = new mongoose.Schema({
   imageUrl: String
 });
 
+const commentSchema = new mongoose.Schema({
+  creatorId: ObjectId,
+  comment:String,
+  dateCreated:Date,
+  interval:String
+});
+
 const contentSchema = new mongoose.Schema({
   creatorId: ObjectId,
   type:String,
   title:String,
   content:String,
   image:{ data: Buffer, contentType: String },
-  invitation_url: String
+  invitation_url: String,
+  comments: [commentSchema]
 });
+
+
 
 module.exports.ratingSchema = ratingSchema;
 module.exports.itemSchema = itemSchema;
 module.exports.storeSchema = storeSchema;
 module.exports.userSchema = userSchema;
+module.exports.commentSchema = commentSchema;
 module.exports.contentSchema= contentSchema;
