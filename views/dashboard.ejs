@@ -10,10 +10,22 @@
     <% contents.forEach(function(content){ %>
         <h2> title : <%= content.title %> </h2>
     <% }); %>
+    <div id = "invitations">
     <h1>invitations</h1>
     <% user.invitations.forEach(function(invitation){ %>
-        <div id = "<%= invitation._id %>"> room name : <%= invitation.name %> </div>
+        <div id = "<%= invitation._id %>" onclick = "acceptInvitation(this.id)"><%= invitation.name %></div>
     <% }); %>
+    </div>
     <a class="btn btn-light btn-lg" href="/logout" role="button">Log Out</a>
     <a href="/createRoom">create room</a>
+    <script>
+      async function acceptInvitation(roomId) {
+        const bodyParams = new URLSearchParams();
+        bodyParams.append("roomId", roomId);
+        await fetch("/acceptInvitation", {method: "POST", body: bodyParams})
+            .then(
+              document.getElementById("invitations").removeChild(document.getElementById(roomId))
+            );
+      }
+    </script>
 <%- include('partials/footer') %>

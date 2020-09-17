@@ -24,7 +24,8 @@ const storage = new Storage({
   projectId,
   keyFilename
 });
-const bucket = storage.bucket('studentinterhub_userprofileimages');
+const studentProfileImagesBucket = storage.bucket('studentinterhub_userprofileimages');
+const roomImagesBucket = storage.bucket('studentinterhub_roomimages');
 
 // Setup server requests and responses on different routes.
 router.get("/", function(req, res) {
@@ -42,7 +43,7 @@ router.get("/dashboard", function(req, res) {
     } else {
       ContentCard.find({}, function(err, allContents) {
         const fileName = req.user._id + ".img";
-        const file = bucket.file(fileName);
+        const file = studentProfileImagesBucket.file(fileName);
         createOrUpdateUserProfileImage(req, file)
           .then(res.render("dashboard", {
             user: req.user,
@@ -93,7 +94,7 @@ router.post("/userProfileImage", upload.single('userProfileImage'), function(req
     validation: 'crc32c'
   };
 
-  bucket.upload(req.file.path, options, function(err, file) {
+  studentProfileImagesBucket.upload(req.file.path, options, function(err, file) {
     createOrUpdateUserProfileImage(req, file)
       .then(res.redirect("/"))
       .catch((err) => console.log(err));
@@ -273,7 +274,7 @@ router.post("/createRoom", function(req, res) {
   });
   const listOfStudents = [req.user._id];
   const User = new mongoose.model("User", userSchema);
-  Room.create({creatorId: req.user._id, name: name, description: description, pendingListOfStudents: pendingListOfStudents, listOfStudents: listOfStudents}, function(err, createdRoom) {
+  Room.create({creatorId: req.user._id, name: name, description: description, listOfStudents: listOfStudents}, function(err, createdRoom) {
     if (err) {
       console.log(err);
       return;
@@ -310,7 +311,15 @@ router.get("/room/:name", function(req, res) {
 });
 
 router.post("/acceptInvitation", function(req, res) {
-
+  const roomId = mongoose.Types.ObjectId(req.body.roomId);
+  const roomName = req.body.roomName;
+  Room.findOneAndUpdate({_id: roomId}, {$push: {listOfStudents: req.user._id}}, function(err, foundRoom) {
+    if (err) {
+      console.log(err);
+      return;
+    }
+    res.end();
+  });
 });
 
 router.get("/rooms", function(req, res) {
