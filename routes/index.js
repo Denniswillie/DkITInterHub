@@ -272,6 +272,7 @@ router.post("/createRoom", function(req, res) {
     return mongoose.Types.ObjectId(e);
   });
   const listOfStudents = [req.user._id];
+  const User = new mongoose.model("User", userSchema);
   Room.create({creatorId: req.user._id, name: name, description: description, pendingListOfStudents: pendingListOfStudents, listOfStudents: listOfStudents}, function(err, createdRoom) {
     if (err) {
       console.log(err);
@@ -308,7 +309,9 @@ router.get("/room/:name", function(req, res) {
   });
 });
 
-router.get("")
+router.get("/rooms", function(req, res) {
+  res.send("<p>Hello World</p>");
+});
 
 router.use("/auth", authRoutes);
 
