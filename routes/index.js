@@ -266,8 +266,49 @@ router.post("/roomnameAvailabilityChecker", function(req, res) {
 });
 
 router.post("/createRoom", function(req, res) {
-  console.log(req.body);
+  const name = req.body.roomName;
+  const description = req.body.roomDescription;
+  const pendingListOfStudents = req.body.selectedFriends.map(function(e) {
+    return mongoose.Types.ObjectId(e);
+  });
+  const listOfStudents = [req.user._id];
+  Room.create({creatorId: req.user._id, name: name, description: description, pendingListOfStudents: pendingListOfStudents, listOfStudents: listOfStudents}, function(err, createdRoom) {
+    if (err) {
+      console.log(err);
+      return;
+    }
+    pendingListOfStudents.forEach(function(studentId) {
+      User.findOneAndUpdate({_id: studentId}, {$push: {invitations: name}}, function(err, foundUser) {
+        if (err) {
+          console.log(err);
+          return;
+        }
+      });
+    });
+    const redirectUrl = "/room/" + name;
+    res.redirect(redirectUrl);
+  });
 });
+
+router.get("/room", function(req, res) {
+  res.redirect("/rooms");
+});
+
+router.get("/room/:name", function(req, res) {
+  // Check if the user is permitted to enter the room.
+  const roomname = req.params.name;
+  Room.findOne({name: {$regex: "^" + roomname + "$", $options: "i"}}, function(err, foundRoom) {
+    if (!foundRoom) {
+      res.redirect("/rooms");
+    } else if (foundRoom.listOfStudents.includes(req.user._id)) {
+      res.render("room", {roomname: foundRoom.name, listOfContentCards: foundRoom.listOfContentCards});
+    } else {
+      res.redirect("/rooms");
+    }
+  });
+});
+
+router.get("")
 
 router.use("/auth", authRoutes);
 
