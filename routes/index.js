@@ -17,6 +17,10 @@ const upload = multer({
   dest: '../userProfileImage'
 });
 
+// Room types.
+const PUBLIC = "public";
+const PRIVATE = "private";
+
 // Authenticate google cloud storage client and create bucket.
 const projectId = 'dkitinterhub'
 const keyFilename = './DkitInterHub-18ea7da7837a.json'
@@ -269,27 +273,34 @@ router.post("/roomnameAvailabilityChecker", function(req, res) {
 router.post("/createRoom", function(req, res) {
   const name = req.body.roomName;
   const description = req.body.roomDescription;
-  const pendingListOfStudents = req.body.selectedFriends.map(function(e) {
-    return mongoose.Types.ObjectId(e);
-  });
-  const listOfStudents = [req.user._id];
-  const User = new mongoose.model("User", userSchema);
-  Room.create({creatorId: req.user._id, name: name, description: description, listOfStudents: listOfStudents}, function(err, createdRoom) {
-    if (err) {
-      console.log(err);
-      return;
-    }
-    pendingListOfStudents.forEach(function(studentId) {
-      User.findOneAndUpdate({_id: studentId}, {$push: {invitations: createdRoom}}, function(err, foundUser) {
-        if (err) {
-          console.log(err);
-          return;
-        }
-      });
+  const type = req.body.roomType;
+  const redirectUrl = "/room/" + name;
+  if (type == PUBLIC) {
+    const pendingListOfStudents = req.body.selectedFriends.map(function(e) {
+      return mongoose.Types.ObjectId(e);
     });
-    const redirectUrl = "/room/" + name;
-    res.redirect(redirectUrl);
-  });
+    const listOfStudents = [req.user._id];
+    const User = new mongoose.model("User", userSchema);
+    Room.create({creatorId: req.user._id, name: name, description: description, listOfStudents: listOfStudents, type: type}, function(err, createdRoom) {
+      if (err) {
+        console.log(err);
+        return;
+      }
+      pendingListOfStudents.forEach(function(studentId) {
+        User.findOneAndUpdate({_id: studentId}, {$push: {invitations: createdRoom}}, function(err, foundUser) {
+          if (err) {
+            console.log(err);
+            return;
+          }
+        });
+      });
+      res.redirect(redirectUrl);
+    });
+  } else {
+    Room.create({creatorId: req.user._id, name: name, description: description, type: type}, function(err, createdRoom) {
+      res.redirect(redirectUrl);
+    });
+  }
 });
 
 router.get("/room", function(req, res) {

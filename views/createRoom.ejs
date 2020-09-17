@@ -1,5 +1,4 @@
 <%- include('partials/header') %>
-
     <form action="/createRoom" method = "POST">
       <div class="form-group">
         <label for="exampleInputEmail1">Room name: </label>
@@ -13,7 +12,13 @@
         <input name="roomDescription" type="text" class="form-control" id="description" aria-describedby="emailHelp" placeholder="Enter room description" autocomplete="off" required>
       </div>
 
-      <div class="form-group">
+      <label for="roomType">Room type:</label>
+        <select id="roomType" name="roomType" onchange="roomTypeChanges(this.value)">
+          <option value="public">Public</option>
+          <option value="private">Private</option>
+        </select>
+
+      <div class="form-group" id = "inviteFriendsDiv">
         <label for="inviteFriends">Invite friends: </label>
         <input name="inviteFriends" type="text" class="form-control" id="inviteFriends" aria-describedby="emailHelp" placeholder="Enter content" autocomplete="off">
       </div>
@@ -23,6 +28,20 @@
       <button type="submit" id ="submit" class="btn btn-primary">Submit</button>
     </form>
     <script>
+      const PUBLIC = "public";
+      const PRIVATE = "private";
+      function roomTypeChanges(value) {
+        if (value == PUBLIC) {
+          document.getElementById("inviteFriendsDiv").style.visibility = "visible";
+          document.getElementById("existingUsers").style.visibility = "visible";
+          document.getElementById("selectedFriends").style.visibility = "visible";
+        } else {
+          document.getElementById("inviteFriendsDiv").style.visibility = "hidden";
+          document.getElementById("existingUsers").style.visibility = "hidden";
+          document.getElementById("selectedFriends").style.visibility = "hidden";
+        }
+      }
+
       const ROOMNAME_IS_AVAILABLE = "Room name is available!";
       const roomnameInput = document.getElementById("roomnameInput");
       roomnameInput.addEventListener("input", function(e) {
