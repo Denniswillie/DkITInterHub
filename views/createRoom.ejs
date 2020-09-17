@@ -1,6 +1,6 @@
 <%- include('partials/header') %>
 
-    <form action="/createRoom" onsubmit = "sendPostRequest">
+    <form action="/createRoom" method = "POST">
       <div class="form-group">
         <label for="exampleInputEmail1">Room name: </label>
         <input name="roomName" type="text" class="form-control" id="roomnameInput" aria-describedby="emailHelp" placeholder="Enter room name" autocomplete="off" required>

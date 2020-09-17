@@ -266,7 +266,7 @@ router.post("/roomnameAvailabilityChecker", function(req, res) {
 });
 
 router.post("/createRoom", function(req, res) {
-  
+  console.log(req.body);
 });
 
 router.use("/auth", authRoutes);

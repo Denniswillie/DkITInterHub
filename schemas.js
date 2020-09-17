@@ -48,7 +48,7 @@ const roomSchema = new mongoose.Schema({
   creatorId: ObjectId,
   name: String,
   description: String,
-  pendingListOfStudents: [userSchema],
+  pendingListOfStudents: [ObjectId],
   listOfStudents: [userSchema],
   listOfContentCards: [contentSchema]
 });
