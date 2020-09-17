@@ -24,7 +24,7 @@ const storage = new Storage({
   projectId,
   keyFilename
 });
-const bucket = storage.bucket('first_test_bucket_dkitinterhub');
+const bucket = storage.bucket('studentinterhub_userprofileimages');
 
 // Setup server requests and responses on different routes.
 router.get("/", function(req, res) {
@@ -279,7 +279,7 @@ router.post("/createRoom", function(req, res) {
       return;
     }
     pendingListOfStudents.forEach(function(studentId) {
-      User.findOneAndUpdate({_id: studentId}, {$push: {invitations: name}}, function(err, foundUser) {
+      User.findOneAndUpdate({_id: studentId}, {$push: {invitations: createdRoom}}, function(err, foundUser) {
         if (err) {
           console.log(err);
           return;

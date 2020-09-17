@@ -20,21 +20,6 @@ const storeSchema = new mongoose.Schema({
   items: [itemSchema]
 });
 
-const userSchema = new mongoose.Schema({
-  username: String,
-  googleId: String,
-  outlookId: String,
-  facebookId: String,
-  name: String,
-  country: String,
-  rating: ratingSchema,
-  store: storeSchema,
-  phoneNumber: String,
-  imageUrl: String,
-  course: String,
-  invitations: [String],
-});
-
 const contentSchema = new mongoose.Schema({
   creatorId: ObjectId,
   type:String,
@@ -51,6 +36,21 @@ const roomSchema = new mongoose.Schema({
   pendingListOfStudents: [ObjectId],
   listOfStudents: [ObjectId],
   listOfContentCards: [contentSchema]
+});
+
+const userSchema = new mongoose.Schema({
+  username: String,
+  googleId: String,
+  outlookId: String,
+  facebookId: String,
+  name: String,
+  country: String,
+  rating: ratingSchema,
+  store: storeSchema,
+  phoneNumber: String,
+  imageUrl: String,
+  course: String,
+  invitations: [roomSchema],
 });
 
 module.exports.ratingSchema = ratingSchema;

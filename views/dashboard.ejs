@@ -12,7 +12,7 @@
     <% }); %>
     <h1>invitations</h1>
     <% user.invitations.forEach(function(invitation){ %>
-        <h2> room name : <%= invitation %> </h2>
+        <div id = "<%= invitation._id %>"> room name : <%= invitation.name %> </div>
     <% }); %>
     <a class="btn btn-light btn-lg" href="/logout" role="button">Log Out</a>
     <a href="/createRoom">create room</a>
