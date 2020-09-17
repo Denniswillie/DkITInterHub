@@ -302,7 +302,7 @@ router.get("/room/:name", function(req, res) {
     if (!foundRoom) {
       res.redirect("/rooms");
     } else if (foundRoom.listOfStudents.includes(req.user._id)) {
-      res.render("room", {roomname: foundRoom.name, listOfContentCards: foundRoom.listOfContentCards});
+      res.render("room", {room: foundRoom});
     } else {
       res.redirect("/rooms");
     }
@@ -310,7 +310,7 @@ router.get("/room/:name", function(req, res) {
 });
 
 router.post("/acceptInvitation", function(req, res) {
-  
+
 });
 
 router.get("/rooms", function(req, res) {
