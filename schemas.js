@@ -35,7 +35,8 @@ const roomSchema = new mongoose.Schema({
   description: String,
   listOfStudents: [ObjectId],
   listOfContentCards: [contentSchema],
-  type: String
+  type: String,
+  accessRequests: [ObjectId]
 });
 
 const userSchema = new mongoose.Schema({

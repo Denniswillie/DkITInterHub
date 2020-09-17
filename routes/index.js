@@ -308,6 +308,9 @@ router.get("/room", function(req, res) {
 });
 
 router.get("/room/:name", function(req, res) {
+  // Check if room is public or private
+  
+
   // Check if the user is permitted to enter the room.
   const roomname = req.params.name;
   Room.findOne({name: {$regex: "^" + roomname + "$", $options: "i"}}, function(err, foundRoom) {
