@@ -1,5 +1,5 @@
 <%- include('partials/header') %>
-    <form action="/createRoom" method = "POST">
+    <form action="/createRoom" method = "POST" enctype="multipart/form-data">
       <div class="form-group">
         <label for="exampleInputEmail1">Room name: </label>
         <input name="roomName" type="text" class="form-control" id="roomnameInput" aria-describedby="emailHelp" placeholder="Enter room name" autocomplete="off" required>
@@ -11,6 +11,8 @@
         <label for="exampleInputEmail1">Description: </label>
         <input name="roomDescription" type="text" class="form-control" id="description" aria-describedby="emailHelp" placeholder="Enter room description" autocomplete="off" required>
       </div>
+
+      <input type="file" name="roomImage">
 
       <label for="roomType">Room type:</label>
         <select id="roomType" name="roomType" onchange="roomTypeChanges(this.value)">

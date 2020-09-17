@@ -21,6 +21,11 @@ const upload = multer({
 const PUBLIC = "public";
 const PRIVATE = "private";
 
+// Room access status.
+const ACCESS_GRANTED = "granted";
+const ACCESS_DENIED = "denied";
+const ACCESS_REQUESTED = "requested";
+
 // Authenticate google cloud storage client and create bucket.
 const projectId = 'dkitinterhub'
 const keyFilename = './DkitInterHub-18ea7da7837a.json'
@@ -308,19 +313,60 @@ router.get("/room", function(req, res) {
 });
 
 router.get("/room/:name", function(req, res) {
-  // Check if room is public or private
-  
-
   // Check if the user is permitted to enter the room.
   const roomname = req.params.name;
   Room.findOne({name: {$regex: "^" + roomname + "$", $options: "i"}}, function(err, foundRoom) {
-    if (!foundRoom) {
-      res.redirect("/rooms");
-    } else if (foundRoom.listOfStudents.includes(req.user._id)) {
-      res.render("room", {room: foundRoom});
-    } else {
+    if (err) {
+      console.log(err);
+      return;
+    }
+    else if (!foundRoom) {
       res.redirect("/rooms");
     }
+    else if (foundRoom.type == PRIVATE) {
+      if (foundRoom.listOfStudents.includes(req.user._id)) {
+        if (foundRoom.creatorId == req.user._id) {
+          const requesting_users = [];
+          foundRoom.accessRequests.forEach(function(userId) {
+            User.findById(userId, function(err, foundUser) {
+              if (err) {
+                console.log(err);
+                return;
+              }
+              requesting_users.push(foundUser);
+            });
+          });
+          res.render("room", {
+            user: req.user,
+            requesting_users: requesting_users,
+            room: foundRoom,
+            accessStatus: ACCESS_GRANTED
+          });
+        } else {
+          res.render("room", {user: req.user, room: foundRoom, accessStatus: ACCESS_GRANTED});
+        }
+      }
+      else if (foundRoom.accessRequests.includes(req.user._id)) {
+        res.render("room", {user: req.user, room: foundRoom, accessStatus: ACCESS_REQUESTED});
+      }
+      else {
+        res.render("room", {user: req.user, room: foundRoom, accessStatus: ACCESS_DENIED});
+      }
+    }
+    else {
+      res.render("room", {user: req.user, room: foundRoom, accessStatus: ACCESS_GRANTED});
+    }
+  });
+});
+
+room.post("/requestAccess", function(req, res) {
+  const roomId = req.body.roomId;
+  Room.findOneAndUpdate({_id: roomId}, {$push: {accessRequests: req.user._id}}, function(err, foundRoom) {
+    if (err) {
+      console.log(err);
+      return;
+    }
+    res.end();
   });
 });
 
@@ -331,8 +377,56 @@ router.post("/acceptInvitation", function(req, res) {
     if (err) {
       console.log(err);
       return;
+    } else if (foundRoom) {
+      User.findOneAndUpdate({_id: req.user._id}, {$pull: {invitations: foundRoom}}, function(err, foundUser) {
+        if (err) {
+          console.log(err);
+          return;
+        }
+      });
     }
-    res.end();
+  });
+});
+
+router.post("/denyInvitation", function(req, res) {
+  const roomId = req.body.roomId;
+  Room.findById(roomId, function(err, foundRoom) {
+    if (err) {
+      console.log(err);
+      return;
+    } else if (foundRoom){
+      User.findOneAndUpdate({_id: req.user._id}, {$pull: {invitations: foundRoom}}, function(err, foundUser) {
+        if (err) {
+          console.log(err);
+          return;
+        }
+      });
+    }
+  });
+});
+
+router.post("/acceptRequestAccess", function(req, res) {
+  const requesterId = req.body.requesterId;
+  const roomId = req.body.roomId;
+  // Remove requesterId from Room.accessRequests
+  // Add requesterId to listOfStudents
+  Room.findOneAndUpdate({_id: roomId}, {$pull: {accessRequests: requesterId}, $push: {listOfStudents: requesterId}}, function(err, foundRoom) {
+    if (err) {
+      console.log(err);
+      return;
+    }
+  });
+});
+
+router.post("/denyRequestAccess", function(req, res) {
+  const requesterId = req.body.requesterId;
+  const roomId = req.body.roomId;
+  // Add requesterId to listOfStudents
+  Room.findOneAndUpdate({_id: roomId}, {$pull: {accessRequests: requesterId}}, function(err, foundRoom) {
+    if (err) {
+      console.log(err);
+      return;
+    }
   });
 });
 

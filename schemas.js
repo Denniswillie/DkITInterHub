@@ -36,7 +36,8 @@ const roomSchema = new mongoose.Schema({
   listOfStudents: [ObjectId],
   listOfContentCards: [contentSchema],
   type: String,
-  accessRequests: [ObjectId]
+  accessRequests: [ObjectId],
+  imageUrl: String
 });
 
 const userSchema = new mongoose.Schema({
@@ -51,7 +52,7 @@ const userSchema = new mongoose.Schema({
   phoneNumber: String,
   imageUrl: String,
   course: String,
-  invitations: [roomSchema],
+  invitations: [roomSchema]
 });
 
 module.exports.ratingSchema = ratingSchema;
