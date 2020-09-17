@@ -309,6 +309,10 @@ router.get("/room/:name", function(req, res) {
   });
 });
 
+router.post("/acceptInvitation", function(req, res) {
+  
+});
+
 router.get("/rooms", function(req, res) {
   res.send("<p>Hello World</p>");
 });
