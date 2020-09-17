@@ -246,8 +246,27 @@ async function findUserThatHasMatchingUsername(req) {
     });
 }
 
-router.post("/createRoom", function(req, res) {
+router.post("/roomnameAvailabilityChecker", function(req, res) {
+  const roomname = req.body.roomname;
+  Room.find({
+    name: {
+      $regex: "^" + roomname + "$",
+      $options: "i"
+    }
+  }, function(err, foundRooms) {
+    if (err) {
+      console.log(err);
+      return;
+    } else if (foundRooms.length == 0) {
+      res.send("Room name is available!");
+    } else {
+      res.send("Room name not available!");
+    }
+  });
+});
 
+router.post("/createRoom", function(req, res) {
+  
 });
 
 router.use("/auth", authRoutes);

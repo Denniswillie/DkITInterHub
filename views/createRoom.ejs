@@ -20,7 +20,7 @@
 
       <div id="existingUsers"></div>
       <div id="selectedFriends"></div>
-      <button type="submit" class="btn btn-primary">Submit</button>
+      <button type="submit" id ="submit" class="btn btn-primary">Submit</button>
     </form>
     <script>
       const ROOMNAME_IS_AVAILABLE = "Room name is available!";
@@ -32,7 +32,7 @@
           fetch("/roomnameAvailabilityChecker", {method: 'POST', body: bodyParams})
               .then((response) => response.text())
               .then((roomnameStatus) => {
-                document.getElementById("roomnameStatus").value = userNameStatus;
+                document.getElementById("roomnameStatus").value = roomnameStatus;
                 if (roomnameStatus == ROOMNAME_IS_AVAILABLE) {
                   document.getElementById("submit").disabled = false;
                 } else {
@@ -40,6 +40,7 @@
                 }
               });
         } else {
+          document.getElementById("roomnameStatus").value = "";
           document.getElementById("submit").disabled = true;
         }
       });
@@ -59,12 +60,28 @@
                   const existingUserDiv = document.createElement("div");
                   existingUserDiv.innerHTML =
                       "<b>" + existingUser.username.substring(0, inputLength) + "</b>" + existingUser.username.substring(inputLength);
+                  existingUserDiv.setAttribute("id", existingUser._id);
                   existingUserDiv.addEventListener("click", function(req, res) {
-                    const selectedFriend = document.createElement("input");
-                    selectedFriend.setAttribute("type", "text");
-                    selectedFriend.setAttribute("value", existingUser._id);
-                    selectedFriend.setAttribute("name", "selectedFriends[]");
-                    document.getElementById("selectedFriends").appendChild(selectedFriend);
+                    const selectedFriendsDiv = document.getElementById("selectedFriends");
+                    var alreadySelected = false;
+                    var selectedFriendsDivChild = selectedFriendsDiv.firstChild;
+                    while (selectedFriendsDivChild != null) {
+                      if (selectedFriendsDivChild.value == this.id) {
+                        alreadySelected = true;
+                        break;
+                      } else {
+                        selectedFriendsDivChild = selectedFriendsDivChild.nextSibling;
+                      }
+                    }
+                    if (!alreadySelected) {
+                      const selectedFriend = document.createElement("input");
+                      selectedFriend.classList.add("selectedFriend");
+                      selectedFriend.setAttribute("type", "text");
+                      selectedFriend.setAttribute("value", existingUser._id);
+                      selectedFriend.setAttribute("name", "selectedFriends[]");
+                      selectedFriend.style.pointerEvents = "none";
+                      selectedFriendsDiv.appendChild(selectedFriend);
+                    }
                   });
                   existingUsersDiv.appendChild(existingUserDiv);
                 });
