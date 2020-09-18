@@ -26,7 +26,9 @@ const contentSchema = new mongoose.Schema({
   title:String,
   content:String,
   image:{ data: Buffer, contentType: String },
-  invitation_url: String
+  invitation_url: String,
+  timestamp: Number,
+  roomId: ObjectId
 });
 
 const roomSchema = new mongoose.Schema({

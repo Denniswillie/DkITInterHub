@@ -14,7 +14,7 @@ const {
 } = require('@google-cloud/storage');
 const multer = require('multer')
 const upload = multer({
-  dest: '../userProfileImage'
+  dest: '../uploadedImage'
 });
 
 // Room types.
@@ -104,9 +104,11 @@ router.post("/userProfileImage", upload.single('userProfileImage'), function(req
   };
 
   studentProfileImagesBucket.upload(req.file.path, options, function(err, file) {
-    createOrUpdateUserProfileImage(req, file)
-      .then(res.redirect("/"))
-      .catch((err) => console.log(err));
+    if (err) {
+      console.log(err);
+      return;
+    }
+    res.redirect("/");
   });
 });
 
@@ -158,24 +160,49 @@ router.post("/usernameAvailabilityChecker", function(req, res) {
   });
 });
 
-router.post("/userProfileInput", function(req, res) {
+router.post("/userProfileInput", upload.single("userProfileImage"), function(req, res) {
   const username = req.body.username;
   const country = req.body.country;
   const course = req.body.course;
-  const User = new mongoose.model("User", userSchema);
-  User.findOneAndUpdate({
-    _id: req.user._id
-  }, {
-    username: username,
-    country: country,
-    course: course
-  }, function(err, foundUser) {
+  var filePath;
+  if (req.file == undefined) {
+    filePath = "./images/defaultImage.png";
+  } else {
+    filePath = req.file.path;
+  }
+  const destination = req.user._id + ".img";
+  const options = {
+    destination: destination,
+    resumable: true,
+    validation: 'crc32c'
+  };
+  studentProfileImagesBucket.upload(filePath, options, function(err, file) {
     if (err) {
       console.log(err);
       return;
-    } else {
-      res.redirect("/dashboard");
     }
+    const config = {
+      action: "read",
+      expires: '12-31-9999'
+    }
+    const User = new mongoose.model("User", userSchema);
+    file.getSignedUrl(config, function(err, url) {
+      User.findOneAndUpdate({
+        _id: req.user._id
+      }, {
+        username: username,
+        country: country,
+        course: course,
+        imageUrl: url
+      }, function(err, foundUser) {
+        if (err) {
+          console.log(err);
+          return;
+        } else {
+          res.redirect("/dashboard");
+        }
+      });
+    });
   });
 });
 
@@ -275,7 +302,7 @@ router.post("/roomnameAvailabilityChecker", function(req, res) {
   });
 });
 
-router.post("/createRoom", function(req, res) {
+router.post("/createRoom", upload.single("roomImage"), function(req, res) {
   const name = req.body.roomName;
   const description = req.body.roomDescription;
   const type = req.body.roomType;
@@ -291,6 +318,14 @@ router.post("/createRoom", function(req, res) {
         console.log(err);
         return;
       }
+      var filePath;
+      if (req.file == undefined) {
+        filePath = "./images/defaultRoomImage.jpg";
+      } else {
+        filePath = req.file.path;
+      }
+      uploadNewRoomImage(createRoom._id, filePath)
+          .then(
       pendingListOfStudents.forEach(function(studentId) {
         User.findOneAndUpdate({_id: studentId}, {$push: {invitations: createdRoom}}, function(err, foundUser) {
           if (err) {
@@ -298,8 +333,8 @@ router.post("/createRoom", function(req, res) {
             return;
           }
         });
-      });
-      res.redirect(redirectUrl);
+      })
+    ).then(res.redirect(redirectUrl));
     });
   } else {
     Room.create({creatorId: req.user._id, name: name, description: description, type: type}, function(err, createdRoom) {
@@ -308,58 +343,80 @@ router.post("/createRoom", function(req, res) {
   }
 });
 
-router.get("/room", function(req, res) {
-  res.redirect("/rooms");
-});
+async function uploadNewRoomImage(roomId, filePath) {
+  const destination = roomId + ".img";
+  const options = {
+    destination: destination,
+    resumable: true,
+    validation: 'crc32c'
+  };
 
-router.get("/room/:name", function(req, res) {
-  // Check if the user is permitted to enter the room.
-  const roomname = req.params.name;
-  Room.findOne({name: {$regex: "^" + roomname + "$", $options: "i"}}, function(err, foundRoom) {
+  await roomImagesBucket.upload(filePath, options, function(err, file) {
     if (err) {
       console.log(err);
       return;
     }
-    else if (!foundRoom) {
-      res.redirect("/rooms");
-    }
-    else if (foundRoom.type == PRIVATE) {
-      if (foundRoom.listOfStudents.includes(req.user._id)) {
-        if (foundRoom.creatorId == req.user._id) {
-          const requesting_users = [];
-          foundRoom.accessRequests.forEach(function(userId) {
-            User.findById(userId, function(err, foundUser) {
-              if (err) {
-                console.log(err);
-                return;
-              }
-              requesting_users.push(foundUser);
+  });
+}
+
+router.get("/room", function(req, res) {
+  res.redirect("/rooms");
+});
+
+router.get("/room/:roomId", function(req, res) {
+  const config = {
+    action: "read",
+    expires: '12-31-9999'
+  }
+  const roomId = mongoose.Types.ObjectId(req.params.roomId);
+  const file = roomImagesBucket.file(req.params.roomId + ".img");
+  file.getSignedUrl(config, function(err, url) {
+    Room.findOneAndUpdate({_id: roomId}, {imageUrl: url}, function(err, foundRoom) {
+      if (err) {
+        console.log(err);
+        return;
+      }
+      else if (!foundRoom) {
+        res.redirect("/rooms");
+      }
+      else if (foundRoom.type == PRIVATE) {
+        if (foundRoom.listOfStudents.includes(req.user._id)) {
+          if (foundRoom.creatorId == req.user._id) {
+            const requesting_users = [];
+            foundRoom.accessRequests.forEach(function(userId) {
+              User.findById(userId, function(err, foundUser) {
+                if (err) {
+                  console.log(err);
+                  return;
+                }
+                requesting_users.push(foundUser);
+              });
             });
-          });
-          res.render("room", {
-            user: req.user,
-            requesting_users: requesting_users,
-            room: foundRoom,
-            accessStatus: ACCESS_GRANTED
-          });
-        } else {
-          res.render("room", {user: req.user, room: foundRoom, accessStatus: ACCESS_GRANTED});
+            res.render("room", {
+              user: req.user,
+              requesting_users: requesting_users,
+              room: foundRoom,
+              accessStatus: ACCESS_GRANTED
+            });
+          } else {
+            res.render("room", {user: req.user, room: foundRoom, accessStatus: ACCESS_GRANTED});
+          }
+        }
+        else if (foundRoom.accessRequests.includes(req.user._id)) {
+          res.render("room", {user: req.user, room: foundRoom, accessStatus: ACCESS_REQUESTED});
+        }
+        else {
+          res.render("room", {user: req.user, room: foundRoom, accessStatus: ACCESS_DENIED});
         }
       }
-      else if (foundRoom.accessRequests.includes(req.user._id)) {
-        res.render("room", {user: req.user, room: foundRoom, accessStatus: ACCESS_REQUESTED});
-      }
       else {
-        res.render("room", {user: req.user, room: foundRoom, accessStatus: ACCESS_DENIED});
+        res.render("room", {user: req.user, room: foundRoom, accessStatus: ACCESS_GRANTED});
       }
-    }
-    else {
-      res.render("room", {user: req.user, room: foundRoom, accessStatus: ACCESS_GRANTED});
-    }
+    });
   });
 });
 
-room.post("/requestAccess", function(req, res) {
+router.post("/requestAccess", function(req, res) {
   const roomId = req.body.roomId;
   Room.findOneAndUpdate({_id: roomId}, {$push: {accessRequests: req.user._id}}, function(err, foundRoom) {
     if (err) {
@@ -428,10 +485,6 @@ router.post("/denyRequestAccess", function(req, res) {
       return;
     }
   });
-});
-
-router.get("/rooms", function(req, res) {
-  res.send("<p>Hello World</p>");
 });
 
 router.use("/auth", authRoutes);

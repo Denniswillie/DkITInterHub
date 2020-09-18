@@ -1,5 +1,7 @@
 <%- include('partials/header') %>
-<form action="/userProfileInput" method="post">
+<form action="/userProfileInput" method="post" enctype="multipart/form-data">
+  <label for="">Upload Profile Image</label>
+  <input type="file" name="userProfileImage">
   <label>Enter username: </label>
   <input type="text" name="username" id = "usernameInput" pattern="[^\s]+" title="No spaces allowed" minlength="6" autocomplete="off" required><br>
   <input type="text" id = "userNameStatus" autocomplete="off" readonly><br>
