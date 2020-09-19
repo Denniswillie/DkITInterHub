@@ -163,7 +163,7 @@ router.post("/:contentCard_id/createComment", function(req, res){
 
 // COMMENT UPDATE
 router.post("/:contentCard_id/:comment_id/edit", function(req, res){
-   Comment.findByIdAndUpdate(req.params.comment_id, req.body.comment, function(err, updatedComment){
+   Comment.findByIdAndUpdate(req.params.comment_id, {content:req.body.comment_content}, function(err, updatedComment){
       if(err){
           res.redirect("back");
       } else {
@@ -183,7 +183,7 @@ router.post("/:contentCard_id/:comment_id/delete", function(req, res){
       }else{
         Comment.findByIdAndRemove(req.params.comment_id, function(err){
            if(err){
-                
+
                res.redirect("back");
            } else {
                 var comments = foundContent.comments
