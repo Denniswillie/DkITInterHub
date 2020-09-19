@@ -9,6 +9,7 @@ const commentSchema = schemas.commentSchema;
 const Comment     = new mongoose.model("Comment", commentSchema);
 const authRoutes    = require("../routes/auth");
 const ObjectId = require("mongodb").ObjectID;
+const middleware = require("../middleware");
 
 // function for interval e.g: 4 minutes ago
 function timeSince(date) {
@@ -81,12 +82,13 @@ router.post("/createContent", function(req, res){
   var type = req.body.type;
   var content = req.body.content;
   var invitation_url = req.body.invitation_url;
+  var creatorId = req.user._id;
   var dateCreated = new Date();
 
 
 
   ContentCard.create({title:title, type:type, content:content,
-    invitation_url:invitation_url, dateCreated:dateCreated, comments:[]}, function(err, theContent){
+    invitation_url:invitation_url, dateCreated:dateCreated, creatorId:creatorId, comments:[]}, function(err, theContent){
     if (err){
       console.log(err);
     }else{
@@ -108,7 +110,7 @@ router.get("/:contentCard_id", function(req, res){
   });
 });
 
-router.post("/:contentCard_id/edit", function(req, res){
+router.post("/:contentCard_id/edit", middleware.checkContentCardOwnership, function(req, res){
   ContentCard.findByIdAndUpdate(req.params.contentCard_id, {title:req.body.title, type:req.body.type,
     content:req.body.content, invitation_url:req.body.invitation_url}, function(err, updatedCampground){
        if(err){
@@ -119,7 +121,7 @@ router.post("/:contentCard_id/edit", function(req, res){
        }
     });
   });
-  router.post("/:contentCard_id/delete", function(req, res){
+  router.post("/:contentCard_id/delete", middleware.checkContentCardOwnership, function(req, res){
     ContentCard.findByIdAndRemove(req.params.contentCard_id, function(err){
       if(err){
         console.log(err);
@@ -162,7 +164,7 @@ router.post("/:contentCard_id/createComment", function(req, res){
 });
 
 // COMMENT UPDATE
-router.post("/:contentCard_id/:comment_id/edit", function(req, res){
+router.post("/:contentCard_id/:comment_id/edit", middleware.checkCommentOwnership, function(req, res){
    Comment.findByIdAndUpdate(req.params.comment_id, {content:req.body.comment_content}, function(err, updatedComment){
       if(err){
           res.redirect("back");
@@ -173,7 +175,7 @@ router.post("/:contentCard_id/:comment_id/edit", function(req, res){
 });
 
 // COMMENT DESTROY ROUTE
-router.post("/:contentCard_id/:comment_id/delete", function(req, res){
+router.post("/:contentCard_id/:comment_id/delete", middleware.checkCommentOwnership, function(req, res){
 
     //findByIdAndRemove
     ContentCard.findById(req.params.contentCard_id, function(err, foundContent){
