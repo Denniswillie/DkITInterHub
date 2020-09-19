@@ -1,0 +1,28 @@
+<%- include('partials/header') %>
+
+    <form action="/<%= content._id%>/edit" method="POST">
+      <div class="form-group">
+        <label for="exampleInputEmail1">Title</label>
+        <input name="title" type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" value="<%= content.title %>">
+
+      </div>
+      <div class="form-group">
+        <label for="exampleInputEmail1">Type</label>
+        <input name="type" type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" value="<%= content.type %>"">
+
+      </div>
+      <div class="form-group">
+        <label for="exampleInputEmail1">Content</label>
+        <input name="content" type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" value="<%= content.content%>">
+
+      </div>
+      <div class="form-group">
+        <label for="exampleInputEmail1">invitation URL</label>
+        <input name="invitation_url" type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" value=" <%= content.invitation_url %>">
+
+      </div>
+
+      <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+
+<%- include('partials/footer') %>
