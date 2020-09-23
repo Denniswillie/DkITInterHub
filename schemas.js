@@ -2,32 +2,13 @@
 const mongoose = require("mongoose");
 const ObjectId = require("mongodb").ObjectID;
 
-const ratingSchema = new mongoose.Schema({
-  rate: Number,
-  description: String
-});
-
-const itemSchema = new mongoose.Schema({
-  merchantStoreId: ObjectId,
-  name: String,
-  price: Number,
-  image: String,
-  description: String
-});
-
-const storeSchema = new mongoose.Schema({
-  creatorId: ObjectId,
-  items: [itemSchema]
-});
-
 const contentSchema = new mongoose.Schema({
   creatorId: ObjectId,
-  type:String,
-  title:String,
+  creatorUsername: String,
+  title: String,
   content:String,
-  image:{ data: Buffer, contentType: String },
-  invitation_url: String,
-  timestamp: Number,
+  hasImage: Boolean,
+  timestamp: Number, // May cause errors in the future when timestamp exceeds number limits.
   roomId: ObjectId
 });
 
@@ -36,7 +17,6 @@ const roomSchema = new mongoose.Schema({
   name: String,
   description: String,
   listOfStudents: [ObjectId],
-  listOfContentCards: [contentSchema],
   type: String,
   accessRequests: [ObjectId],
   imageUrl: String
@@ -49,17 +29,11 @@ const userSchema = new mongoose.Schema({
   facebookId: String,
   name: String,
   country: String,
-  rating: ratingSchema,
-  store: storeSchema,
   phoneNumber: String,
-  imageUrl: String,
   course: String,
-  invitations: [roomSchema]
+  imageUrl: String
 });
 
-module.exports.ratingSchema = ratingSchema;
-module.exports.itemSchema = itemSchema;
-module.exports.storeSchema = storeSchema;
 module.exports.userSchema = userSchema;
 module.exports.contentSchema= contentSchema;
 module.exports.roomSchema = roomSchema;

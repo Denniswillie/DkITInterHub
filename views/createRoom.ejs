@@ -1,46 +1,65 @@
 <%- include('partials/header') %>
-    <form action="/createRoom" method = "POST" enctype="multipart/form-data">
-      <div class="form-group">
-        <label for="exampleInputEmail1">Room name: </label>
-        <input name="roomName" type="text" class="form-control" id="roomnameInput" aria-describedby="emailHelp" placeholder="Enter room name" autocomplete="off" required>
+<div class="container">
+  <div class="row">
+    <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
+      <div class="card card-signin my-5">
+        <div class="card-body">
+          <h5 class="card-title text-center">Create Room</h5>
+          <div class="form-signin">
+            <form action="/createRoom" method = "POST">
+              <div class="form-group">
+                <label for="exampleInputEmail1">Room name: </label>
+                <input name="name" type="text" class="form-control" id="roomnameInput" aria-describedby="emailHelp" placeholder="Enter room name" autocomplete="off" required>
+              </div>
+
+              <input type="text" id = "roomnameStatus" autocomplete="off" readonly><br>
+
+              <div class="form-group">
+                <label for="exampleInputEmail1">Description: </label>
+                <input name="description" type="text" class="form-control" id="description" aria-describedby="emailHelp" placeholder="Enter room description" autocomplete="off" required>
+              </div>
+
+              <label for="roomType">Room type:</label>
+                <select id="roomType" name="roomType" onchange="roomTypeChanges(this.value)">
+                  <option value="public">Public</option>
+                  <option value="private">Private</option>
+                </select>
+
+              <div class="form-group" id = "inviteFriendsDiv" style = "visibility: hidden">
+                <label for="inviteFriends">Invite friends: </label>
+                <input name="inviteFriends" type="text" class="form-control" id="inviteFriends" aria-describedby="emailHelp" placeholder="Enter content" autocomplete="off">
+              </div>
+
+              <div id="existingUsers" style = "visibility: hidden"></div>
+              <div id="selectedFriends" style = "visibility: hidden"></div>
+              <label id = "selectedFriendsLabel" style = "visibility: hidden">Selected friends</label>
+              <input name="inviteFriends" type="text" class="form-control" id="selectedFriendsDisplayer" aria-describedby="emailHelp"autocomplete="off" style = "visibility: hidden" readonly>
+              <br>
+
+              <input type="submit" id ="submit" class="btn btn-primary">
+              <a href = "/dashboard" class="btn btn-primary">Go to dashboard</a>
+
+            </form>
+          </div>
+        </div>
       </div>
-
-      <input type="text" id = "roomnameStatus" autocomplete="off" readonly><br>
-
-      <div class="form-group">
-        <label for="exampleInputEmail1">Description: </label>
-        <input name="roomDescription" type="text" class="form-control" id="description" aria-describedby="emailHelp" placeholder="Enter room description" autocomplete="off" required>
-      </div>
-
-      <input type="file" name="roomImage">
-
-      <label for="roomType">Room type:</label>
-        <select id="roomType" name="roomType" onchange="roomTypeChanges(this.value)">
-          <option value="public">Public</option>
-          <option value="private">Private</option>
-        </select>
-
-      <div class="form-group" id = "inviteFriendsDiv">
-        <label for="inviteFriends">Invite friends: </label>
-        <input name="inviteFriends" type="text" class="form-control" id="inviteFriends" aria-describedby="emailHelp" placeholder="Enter content" autocomplete="off">
-      </div>
-
-      <div id="existingUsers"></div>
-      <div id="selectedFriends"></div>
-      <button type="submit" id ="submit" class="btn btn-primary">Submit</button>
-    </form>
+    </div>
+  </div>
+</div>
     <script>
       const PUBLIC = "public";
       const PRIVATE = "private";
       function roomTypeChanges(value) {
-        if (value == PUBLIC) {
-          document.getElementById("inviteFriendsDiv").style.visibility = "visible";
+        if (value == PRIVATE) {
+          document.getElementById("inviteFriends").style.visibility = "visible";
           document.getElementById("existingUsers").style.visibility = "visible";
-          document.getElementById("selectedFriends").style.visibility = "visible";
+          document.getElementById("selectedFriendsDisplayer").style.visibility = "visible";
+          document.getElementById("selectedFriendsLabel").style.visibility = "visible";
         } else {
-          document.getElementById("inviteFriendsDiv").style.visibility = "hidden";
+          document.getElementById("inviteFriends").style.visibility = "hidden";
           document.getElementById("existingUsers").style.visibility = "hidden";
-          document.getElementById("selectedFriends").style.visibility = "hidden";
+          document.getElementById("selectedFriendsDisplayer").style.visibility = "hidden";
+          document.getElementById("selectedFriendsLabel").style.visibility = "visible";
         }
       }
 
@@ -78,7 +97,9 @@
                 const existingUsersDiv = document.getElementById("existingUsers");
                 removeAllChildElements(existingUsersDiv);
                 existingUsers.forEach(function(existingUser) {
-                  const existingUserDiv = document.createElement("div");
+                  const existingUserDiv = document.createElement("a");
+                  existingUserDiv.style.width = "100%";
+                  existingUserDiv.classList.add("dropdown-item");
                   existingUserDiv.innerHTML =
                       "<b>" + existingUser.username.substring(0, inputLength) + "</b>" + existingUser.username.substring(inputLength);
                   existingUserDiv.setAttribute("id", existingUser._id);
@@ -99,6 +120,11 @@
                       selectedFriend.classList.add("selectedFriend");
                       selectedFriend.setAttribute("type", "text");
                       selectedFriend.setAttribute("value", existingUser._id);
+                      if (selectedFriendsDisplayer.value == "") {
+                        selectedFriendsDisplayer.value = existingUser.username;
+                      } else {
+                        selectedFriendsDisplayer.value = selectedFriendsDisplayer.value + ", " + existingUser.username;
+                      }
                       selectedFriend.setAttribute("name", "selectedFriends[]");
                       selectedFriend.style.pointerEvents = "none";
                       selectedFriendsDiv.appendChild(selectedFriend);

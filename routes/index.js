@@ -35,13 +35,14 @@ const storage = new Storage({
 });
 const studentProfileImagesBucket = storage.bucket('studentinterhub_userprofileimages');
 const roomImagesBucket = storage.bucket('studentinterhub_roomimages');
+const contentImagesBucket = storage.bucket('studentinterhub_contentimages');
 
 // Setup server requests and responses on different routes.
 router.get("/", function(req, res) {
   if (req.isAuthenticated()) {
     res.redirect("/dashboard");
   } else {
-    res.render("login");
+    res.render("home");
   }
 });
 
@@ -50,19 +51,50 @@ router.get("/dashboard", function(req, res) {
     if (req.user.username == undefined) {
       res.redirect("/userProfileInput");
     } else {
-      ContentCard.find({}, function(err, allContents) {
-        const fileName = req.user._id + ".img";
-        const file = studentProfileImagesBucket.file(fileName);
-        createOrUpdateUserProfileImage(req, file)
-          .then(res.render("dashboard", {
-            user: req.user,
-            contents: allContents
-          }))
-          .catch((err) => console.log(err));
+      ContentCard.find({ roomId: undefined }, function(err, foundContents) {
+        getContentImageSignedUrls(foundContents)
+            .then((contentImageSignedUrls) => {
+              const studentProfileImageFileName = req.user._id + ".img";
+              const studentProfileImagefile = studentProfileImagesBucket.file(studentProfileImageFileName);
+              createOrUpdateUserProfileImage(req, studentProfileImagefile)
+                .then(res.render("dashboard", {
+                  user: req.user,
+                  contents: foundContents,
+                  contentImageSignedUrls: contentImageSignedUrls
+                }))
+                .catch((err) => console.log(err));
+            });
       });
     }
   } else {
-    res.redirect("/");
+    res.redirect("/login");
+  }
+});
+
+async function getContentImageSignedUrls(foundContents) {
+  const promises = [];
+  const config = {
+    action: "read",
+    expires: '12-31-9999'
+  }
+  for (var i = 0;i < foundContents.length;i ++) {
+    if (foundContents[i].hasImage) {
+      const contentImageFileName = foundContents[i]._id + ".img";
+      const contentImageFile = await contentImagesBucket.file(contentImageFileName);
+      promises.push(contentImageFile.getSignedUrl(config));
+    } else {
+      promises.push("");
+    }
+  }
+  const contentImageSignedUrls = await Promise.all(promises);
+  return contentImageSignedUrls;
+}
+
+router.get("/login", function(req, res) {
+  if (req.isAuthenticated()) {
+    res.redirect("dashboard");
+  } else {
+    res.render("login");
   }
 });
 
@@ -71,26 +103,41 @@ router.get("/logout", function(req, res) {
   res.redirect("/");
 });
 
-router.get("/createContent", function(req, res) {
-  res.render("createContent");
-})
-router.post("/createContent", function(req, res) {
-  var title = req.body.title;
-  var type = req.body.type;
-  var content = req.body.content;
-  var invitation_url = req.body.invitation_url;
-
-  ContentCard.create({
-    title: title,
-    type: type,
-    content: content,
-    invitation_url: invitation_url
-  }, function(err, theContent) {
+router.post("/createContent", upload.single("contentImage"), function(req, res) {
+  const title = req.body.title;
+  const content = req.body.content;
+  var redirectUrl;
+  var roomId;
+  if (req.body.roomId == undefined) {
+    redirectUrl = "/dashboard";
+  } else {
+    roomId = mongoose.Types.ObjectId(req.body.roomId);
+    redirectUrl = "/room/" + roomId;
+  }
+  var hasImage = false;
+  if (req.file != undefined) {
+    hasImage = true;
+  }
+  ContentCard.create({ creatorId: req.user._id, creatorUsername: req.user.username, title: title, content: content, timestamp: Math.floor(Date.now() / 1000), roomId: roomId, hasImage: hasImage }, function(err, createdContent) {
     if (err) {
       console.log(err);
+    } else if (req.file != undefined) {
+      const destination = createdContent._id + ".img";
+      const options = {
+        destination: destination,
+        resumable: true,
+        validation: 'crc32c'
+      };
+
+      contentImagesBucket.upload(req.file.path, options, function(err, file) {
+        if (err) {
+          console.log(err);
+          return;
+        }
+        res.redirect(redirectUrl);
+      });
     } else {
-      console.log(theContent);
-      res.redirect("/dashboard");
+      res.redirect(redirectUrl);
     }
   });
 });
@@ -283,6 +330,59 @@ async function findUserThatHasMatchingUsername(req) {
     });
 }
 
+router.post("/existingRooms", function(req, res) {
+  const startingLettersRegex = "^" + req.body.inputElement;
+  findRoomsThatHasMatchingName(req)
+    .then((matchedRoom) => {
+      Room.find({
+          $and: [{
+            name: {
+              $regex: "^" + startingLettersRegex,
+              $options: "i"
+            }
+          }, {
+            name: {
+              $not: {
+                $regex: "^" + matchedRoom.name + "$",
+                $options: "i"
+              }
+            }
+          }]
+        }, function(err, foundRooms) {
+          if (err) {
+            console.log(err);
+          } else if (matchedRoom.foundRoom != undefined) {
+            foundRooms.unshift(matchedRoom.foundRoom);
+            res.send(foundRooms);
+          } else {
+            res.send(foundRooms);
+          }
+        })
+        .limit(4);
+    });
+});
+
+async function findRoomsThatHasMatchingName(req) {
+  return new Promise(function(resolve, reject) {
+      Room.findOne({name: {$regex: "^" + req.body.inputElement + "$",$options: "i"}}, function(err, foundRoom) {
+        if (err) {
+          console.log(err);
+        } else if (foundRoom) {
+          resolve({
+            name: foundRoom.name,
+            foundRoom: foundRoom
+          });
+        }
+        resolve({
+          name: ""
+        });
+      });
+    })
+    .then((foundRoom) => {
+      return foundRoom;
+    });
+}
+
 router.post("/roomnameAvailabilityChecker", function(req, res) {
   const roomname = req.body.roomname;
   Room.find({
@@ -302,104 +402,91 @@ router.post("/roomnameAvailabilityChecker", function(req, res) {
   });
 });
 
-router.post("/createRoom", upload.single("roomImage"), function(req, res) {
-  const name = req.body.roomName;
-  const description = req.body.roomDescription;
+router.post("/createRoom", function(req, res) {
+  const name = req.body.name;
+  const description = req.body.description;
   const type = req.body.roomType;
-  const redirectUrl = "/room/" + name;
-  if (type == PUBLIC) {
-    const pendingListOfStudents = req.body.selectedFriends.map(function(e) {
-      return mongoose.Types.ObjectId(e);
-    });
-    const listOfStudents = [req.user._id];
+  var listOfStudents;
+  if (type == PRIVATE) {
+    if (req.body.selectedFriends != undefined) {
+      listOfStudents = req.body.selectedFriends.map(function(e) {
+        return mongoose.Types.ObjectId(e);
+      });
+      listOfStudents.push(req.user._id);
+    } else {
+      listOfStudents = [req.user._id];
+    }
     const User = new mongoose.model("User", userSchema);
     Room.create({creatorId: req.user._id, name: name, description: description, listOfStudents: listOfStudents, type: type}, function(err, createdRoom) {
       if (err) {
         console.log(err);
         return;
       }
-      var filePath;
-      if (req.file == undefined) {
-        filePath = "./images/defaultRoomImage.jpg";
-      } else {
-        filePath = req.file.path;
-      }
-      uploadNewRoomImage(createRoom._id, filePath)
-          .then(
-      pendingListOfStudents.forEach(function(studentId) {
-        User.findOneAndUpdate({_id: studentId}, {$push: {invitations: createdRoom}}, function(err, foundUser) {
-          if (err) {
-            console.log(err);
-            return;
-          }
-        });
-      })
-    ).then(res.redirect(redirectUrl));
+      res.redirect("/room/" + createdRoom._id);
     });
   } else {
     Room.create({creatorId: req.user._id, name: name, description: description, type: type}, function(err, createdRoom) {
-      res.redirect(redirectUrl);
+      if (err) {
+        console.log(err);
+        return;
+      }
+      res.redirect("/room/" + createdRoom._id);
     });
   }
 });
-
-async function uploadNewRoomImage(roomId, filePath) {
-  const destination = roomId + ".img";
-  const options = {
-    destination: destination,
-    resumable: true,
-    validation: 'crc32c'
-  };
-
-  await roomImagesBucket.upload(filePath, options, function(err, file) {
-    if (err) {
-      console.log(err);
-      return;
-    }
-  });
-}
 
 router.get("/room", function(req, res) {
   res.redirect("/rooms");
 });
 
 router.get("/room/:roomId", function(req, res) {
-  const config = {
-    action: "read",
-    expires: '12-31-9999'
-  }
   const roomId = mongoose.Types.ObjectId(req.params.roomId);
-  const file = roomImagesBucket.file(req.params.roomId + ".img");
-  file.getSignedUrl(config, function(err, url) {
-    Room.findOneAndUpdate({_id: roomId}, {imageUrl: url}, function(err, foundRoom) {
+  ContentCard.find({roomId: roomId}, function(err, contents) {
+    Room.findById(roomId, function(err, foundRoom) {
       if (err) {
         console.log(err);
         return;
       }
       else if (!foundRoom) {
-        res.redirect("/rooms");
+        res.status(404).send("Room is not found.");
       }
       else if (foundRoom.type == PRIVATE) {
         if (foundRoom.listOfStudents.includes(req.user._id)) {
-          if (foundRoom.creatorId == req.user._id) {
-            const requesting_users = [];
-            foundRoom.accessRequests.forEach(function(userId) {
-              User.findById(userId, function(err, foundUser) {
-                if (err) {
-                  console.log(err);
-                  return;
-                }
-                requesting_users.push(foundUser);
-              });
-            });
-            res.render("room", {
-              user: req.user,
-              requesting_users: requesting_users,
-              room: foundRoom,
-              accessStatus: ACCESS_GRANTED
-            });
+          if (String(req.user._id) == String(foundRoom.creatorId)) {
+            pushUsersIdsToList(foundRoom)
+                .then((requesting_users) => {
+                  getContentImageSignedUrls(contents)
+                      .then((contentImageSignedUrls) => {
+                        const studentProfileImageFileName = req.user._id + ".img";
+                        const studentProfileImagefile = studentProfileImagesBucket.file(studentProfileImageFileName);
+                        createOrUpdateUserProfileImage(req, studentProfileImagefile)
+                          .then(res.render("room", {
+                            user: req.user,
+                            requesting_users: requesting_users,
+                            contents: contents,
+                            room: foundRoom,
+                            contentImageSignedUrls: contentImageSignedUrls,
+                            accessStatus: ACCESS_GRANTED
+                          }))
+                          .catch((err) => console.log(err));
+                      });
+                });
           } else {
-            res.render("room", {user: req.user, room: foundRoom, accessStatus: ACCESS_GRANTED});
+            getContentImageSignedUrls(contents)
+                .then((contentImageSignedUrls) => {
+                  const studentProfileImageFileName = req.user._id + ".img";
+                  const studentProfileImagefile = studentProfileImagesBucket.file(studentProfileImageFileName);
+                  createOrUpdateUserProfileImage(req, studentProfileImagefile)
+                    .then(res.render("room", {
+                      user: req.user,
+                      contents: contents,
+                      requesting_users: undefined,
+                      room: foundRoom,
+                      contentImageSignedUrls: contentImageSignedUrls,
+                      accessStatus: ACCESS_GRANTED
+                    }))
+                    .catch((err) => console.log(err));
+                });
           }
         }
         else if (foundRoom.accessRequests.includes(req.user._id)) {
@@ -410,11 +497,36 @@ router.get("/room/:roomId", function(req, res) {
         }
       }
       else {
-        res.render("room", {user: req.user, room: foundRoom, accessStatus: ACCESS_GRANTED});
+        getContentImageSignedUrls(contents)
+            .then((contentImageSignedUrls) => {
+              const studentProfileImageFileName = req.user._id + ".img";
+              const studentProfileImagefile = studentProfileImagesBucket.file(studentProfileImageFileName);
+              createOrUpdateUserProfileImage(req, studentProfileImagefile)
+                .then(res.render("room", {
+                  user: req.user,
+                  contents: contents,
+                  requesting_users: undefined,
+                  room: foundRoom,
+                  contentImageSignedUrls: contentImageSignedUrls,
+                  accessStatus: ACCESS_GRANTED
+                }))
+                .catch((err) => console.log(err));
+            });
       }
     });
   });
 });
+
+async function pushUsersIdsToList(foundRoom) {
+  const promises = [];
+  const accessRequests = foundRoom.accessRequests;
+  for (var i = 0;i < accessRequests.length;i++) {
+      const User = new mongoose.model("User", userSchema);
+      promises.push(User.findById(accessRequests[i]));
+  }
+  const requesting_users = await Promise.all(promises);
+  return requesting_users;
+}
 
 router.post("/requestAccess", function(req, res) {
   const roomId = req.body.roomId;
@@ -423,48 +535,50 @@ router.post("/requestAccess", function(req, res) {
       console.log(err);
       return;
     }
-    res.end();
+    res.redirect("/room/" + roomId);
   });
 });
 
-router.post("/acceptInvitation", function(req, res) {
-  const roomId = mongoose.Types.ObjectId(req.body.roomId);
-  const roomName = req.body.roomName;
-  Room.findOneAndUpdate({_id: roomId}, {$push: {listOfStudents: req.user._id}}, function(err, foundRoom) {
-    if (err) {
-      console.log(err);
-      return;
-    } else if (foundRoom) {
-      User.findOneAndUpdate({_id: req.user._id}, {$pull: {invitations: foundRoom}}, function(err, foundUser) {
-        if (err) {
-          console.log(err);
-          return;
-        }
-      });
-    }
-  });
-});
-
-router.post("/denyInvitation", function(req, res) {
-  const roomId = req.body.roomId;
-  Room.findById(roomId, function(err, foundRoom) {
-    if (err) {
-      console.log(err);
-      return;
-    } else if (foundRoom){
-      User.findOneAndUpdate({_id: req.user._id}, {$pull: {invitations: foundRoom}}, function(err, foundUser) {
-        if (err) {
-          console.log(err);
-          return;
-        }
-      });
-    }
-  });
-});
+// router.post("/acceptInvitation", function(req, res) {
+//   const roomId = mongoose.Types.ObjectId(req.body.roomId);
+//   const roomName = req.body.roomName;
+//   Room.findOneAndUpdate({_id: roomId}, {$push: {listOfStudents: req.user._id}}, function(err, foundRoom) {
+//     if (err) {
+//       console.log(err);
+//       return;
+//     } else if (foundRoom) {
+//       User.findOneAndUpdate({_id: req.user._id}, {$pull: {invitations: foundRoom}}, function(err, foundUser) {
+//         if (err) {
+//           console.log(err);
+//           return;
+//         }
+//       });
+//     }
+//   });
+// });
+//
+// router.post("/denyInvitation", function(req, res) {
+//   const roomId = req.body.roomId;
+//   Room.findById(roomId, function(err, foundRoom) {
+//     if (err) {
+//       console.log(err);
+//       return;
+//     } else if (foundRoom){
+//       User.findOneAndUpdate({_id: req.user._id}, {$pull: {invitations: foundRoom}}, function(err, foundUser) {
+//         if (err) {
+//           console.log(err);
+//           return;
+//         }
+//       });
+//     }
+//   });
+// });
 
 router.post("/acceptRequestAccess", function(req, res) {
-  const requesterId = req.body.requesterId;
-  const roomId = req.body.roomId;
+  console.log(req.body.requesterId);
+  console.log(req.body.roomId);
+  const requesterId = mongoose.Types.ObjectId(req.body.requesterId);
+  const roomId = mongoose.Types.ObjectId(req.body.roomId);
   // Remove requesterId from Room.accessRequests
   // Add requesterId to listOfStudents
   Room.findOneAndUpdate({_id: roomId}, {$pull: {accessRequests: requesterId}, $push: {listOfStudents: requesterId}}, function(err, foundRoom) {
@@ -472,18 +586,20 @@ router.post("/acceptRequestAccess", function(req, res) {
       console.log(err);
       return;
     }
+    res.redirect("/room/" + roomId);
   });
 });
 
 router.post("/denyRequestAccess", function(req, res) {
-  const requesterId = req.body.requesterId;
-  const roomId = req.body.roomId;
+  const requesterId = mongoose.Types.ObjectId(req.body.requesterId);
+  const roomId = mongoose.Types.ObjectId(req.body.roomId);
   // Add requesterId to listOfStudents
   Room.findOneAndUpdate({_id: roomId}, {$pull: {accessRequests: requesterId}}, function(err, foundRoom) {
     if (err) {
       console.log(err);
       return;
     }
+    res.redirect("/room/" + roomId);
   });
 });
 
