@@ -9,16 +9,12 @@ const mongoose = require("mongoose");
 const schemas = require("./schemas");
 const session = require('express-session');
 const passport = require("passport");
-const passportLocalMongoose = require("passport-local-mongoose");
 const StrategiesManager = require("./authenticationStrategy/StrategiesManager");
 const ObjectId = require("mongodb").ObjectID;
-const findOrCreate = require("mongoose-findorcreate");
 const userSchema = schemas.userSchema;
-const contentSchema = schemas.contentSchema;
 const app = express();
 const port = 3000;
-//full routes on index.js
-const indexRoutes  = require("./routes/index")
+const routes  = require("./routes/index");
 
 class App {
   constructor() {
