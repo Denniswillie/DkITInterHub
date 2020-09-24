@@ -50,6 +50,20 @@ const STORAGE = {
   }
 }
 
+const options = {
+  destination: destination,
+  resumable: true,
+  validation: 'crc32c'
+};
+
+function getOptions(destination) {
+  return {
+    destination: destination,
+    resumable: true,
+    validation: 'crc32c'
+  };
+}
+
 // Setup server requests and responses on different routes.
 router.get("/", function(req, res) {
   if (req.isAuthenticated()) {
@@ -64,19 +78,21 @@ router.get("/dashboard", function(req, res) {
     if (req.user.username == undefined) {
       res.redirect("/userProfileInput");
     } else {
-      ContentCard.find({ roomId: undefined }, function(err, foundContents) {
+      ContentCard.find({
+        roomId: undefined
+      }, function(err, foundContents) {
         getContentImageSignedUrls(foundContents)
-            .then((contentImageSignedUrls) => {
-              const studentProfileImageFileName = req.user._id + ".img";
-              const studentProfileImagefile = studentProfileImagesBucket.file(studentProfileImageFileName);
-              createOrUpdateUserProfileImage(req, studentProfileImagefile)
-                .then(res.render("dashboard", {
+          .then((contentImageSignedUrls) => {
+            getUserProfileImagesSignedUrl(req)
+              .then((userProfileImageSignedUrl) => {
+                res.render("dashboard", {
                   user: req.user,
                   contents: foundContents,
-                  contentImageSignedUrls: contentImageSignedUrls
-                }))
-                .catch((err) => console.log(err));
-            });
+                  contentImageSignedUrls: contentImageSignedUrls,
+                  userProfileImageSignedUrl: userProfileImageSignedUrl
+                })
+              })
+          });
       });
     }
   } else {
@@ -84,19 +100,19 @@ router.get("/dashboard", function(req, res) {
   }
 });
 
-async function getUserProfileImagesSignedUrl(foundUsers, config) {
+async function getUserProfileImagesSignedUrl(req) {
   const file = await STORAGE.BUCKET.USER_PROFILE_IMAGE.file(req.user._id + ".img");
-  const url = await file.getSignedUrl(config);
+  const url = await file.getSignedUrl(STOGAGE.CONFIG);
   return url;
 }
 
-async function getContentImageSignedUrls(foundContents, config) {
+async function getContentImageSignedUrls(foundContents) {
   const promises = [];
-  for (var i = 0;i < foundContents.length;i ++) {
+  for (var i = 0; i < foundContents.length; i++) {
     if (foundContents[i].hasImage) {
       const contentImageFileName = foundContents[i]._id + ".img";
-      const contentImageFile = await contentImagesBucket.file(contentImageFileName);
-      promises.push(contentImageFile.getSignedUrl(config));
+      const contentImageFile = await STORAGE.BUCKET.CONTENT_IMAGE.file(contentImageFileName);
+      promises.push(contentImageFile.getSignedUrl(STORAGE.CONFIG));
     } else {
       promises.push("");
     }
@@ -133,18 +149,20 @@ router.post("/createContent", upload.single("contentImage"), function(req, res) 
   if (req.file != undefined) {
     hasImage = true;
   }
-  ContentCard.create({ creatorId: req.user._id, creatorUsername: req.user.username, title: title, content: content, timestamp: Math.floor(Date.now() / 1000), roomId: roomId, hasImage: hasImage }, function(err, createdContent) {
+  ContentCard.create({
+    creatorId: req.user._id,
+    creatorUsername: req.user.username,
+    title: title,
+    content: content,
+    timestamp: Math.floor(Date.now() / 1000),
+    roomId: roomId,
+    hasImage: hasImage
+  }, function(err, createdContent) {
     if (err) {
       console.log(err);
     } else if (req.file != undefined) {
       const destination = createdContent._id + ".img";
-      const options = {
-        destination: destination,
-        resumable: true,
-        validation: 'crc32c'
-      };
-
-      contentImagesBucket.upload(req.file.path, options, function(err, file) {
+      contentImagesBucket.upload(req.file.path, getOptions(destination), function(err, file) {
         if (err) {
           console.log(err);
           return;
@@ -159,13 +177,7 @@ router.post("/createContent", upload.single("contentImage"), function(req, res) 
 
 router.post("/userProfileImage", upload.single('userProfileImage'), function(req, res) {
   const destination = req.user._id + ".img";
-  const options = {
-    destination: destination,
-    resumable: true,
-    validation: 'crc32c'
-  };
-
-  studentProfileImagesBucket.upload(req.file.path, options, function(err, file) {
+  studentProfileImagesBucket.upload(req.file.path, getOptions(destination), function(err, file) {
     if (err) {
       console.log(err);
       return;
@@ -209,38 +221,12 @@ router.post("/userProfileInput", upload.single("userProfileImage"), function(req
     filePath = req.file.path;
   }
   const destination = req.user._id + ".img";
-  const options = {
-    destination: destination,
-    resumable: true,
-    validation: 'crc32c'
-  };
-  studentProfileImagesBucket.upload(filePath, options, function(err, file) {
+  studentProfileImagesBucket.upload(filePath, getOptions(destination), function(err, file) {
     if (err) {
       console.log(err);
       return;
     }
-    const config = {
-      action: "read",
-      expires: '12-31-9999'
-    }
-    const User = new mongoose.model("User", userSchema);
-    file.getSignedUrl(config, function(err, url) {
-      User.findOneAndUpdate({
-        _id: req.user._id
-      }, {
-        username: username,
-        country: country,
-        course: course,
-        imageUrl: url
-      }, function(err, foundUser) {
-        if (err) {
-          console.log(err);
-          return;
-        } else {
-          res.redirect("/dashboard");
-        }
-      });
-    });
+    res.redirect("/dashboard");
   });
 });
 
@@ -291,17 +277,20 @@ router.post("/existingUsers", function(req, res) {
 });
 
 async function findUserThatHasMatchingUsername(req) {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function(resolve) {
       const User = new mongoose.model("User", userSchema);
       User.findOne({
         $and: [{
-          username: req.body.inputElement
-        },
-        {username: {
-          $not: {
-            $eq: req.user.username
+            username: req.body.inputElement
+          },
+          {
+            username: {
+              $not: {
+                $eq: req.user.username
+              }
+            }
           }
-        }}]
+        ]
       }, function(err, foundUser) {
         if (err) {
           console.log(err);
@@ -355,7 +344,12 @@ router.post("/existingRooms", function(req, res) {
 
 async function findRoomsThatHasMatchingName(req) {
   return new Promise(function(resolve, reject) {
-      Room.findOne({name: {$regex: "^" + req.body.inputElement + "$",$options: "i"}}, function(err, foundRoom) {
+      Room.findOne({
+        name: {
+          $regex: "^" + req.body.inputElement + "$",
+          $options: "i"
+        }
+      }, function(err, foundRoom) {
         if (err) {
           console.log(err);
         } else if (foundRoom) {
@@ -408,7 +402,13 @@ router.post("/createRoom", function(req, res) {
       listOfStudents = [req.user._id];
     }
     const User = new mongoose.model("User", userSchema);
-    Room.create({creatorId: req.user._id, name: name, description: description, listOfStudents: listOfStudents, type: type}, function(err, createdRoom) {
+    Room.create({
+      creatorId: req.user._id,
+      name: name,
+      description: description,
+      listOfStudents: listOfStudents,
+      type: type
+    }, function(err, createdRoom) {
       if (err) {
         console.log(err);
         return;
@@ -416,7 +416,12 @@ router.post("/createRoom", function(req, res) {
       res.redirect("/room/" + createdRoom._id);
     });
   } else {
-    Room.create({creatorId: req.user._id, name: name, description: description, type: type}, function(err, createdRoom) {
+    Room.create({
+      creatorId: req.user._id,
+      name: name,
+      description: description,
+      type: type
+    }, function(err, createdRoom) {
       if (err) {
         console.log(err);
         return;
@@ -432,77 +437,82 @@ router.get("/room", function(req, res) {
 
 router.get("/room/:roomId", function(req, res) {
   const roomId = mongoose.Types.ObjectId(req.params.roomId);
-  ContentCard.find({roomId: roomId}, function(err, contents) {
+  ContentCard.find({
+    roomId: roomId
+  }, function(err, contents) {
     Room.findById(roomId, function(err, foundRoom) {
       if (err) {
         console.log(err);
         return;
-      }
-      else if (!foundRoom) {
+      } else if (!foundRoom) {
         res.status(404).send("Room is not found.");
-      }
-      else if (foundRoom.type == PRIVATE) {
+      } else if (foundRoom.type == PRIVATE) {
         if (foundRoom.listOfStudents.includes(req.user._id)) {
           if (String(req.user._id) == String(foundRoom.creatorId)) {
             pushUsersIdsToList(foundRoom)
-                .then((requesting_users) => {
-                  getContentImageSignedUrls(contents)
-                      .then((contentImageSignedUrls) => {
-                        const studentProfileImageFileName = req.user._id + ".img";
-                        const studentProfileImagefile = studentProfileImagesBucket.file(studentProfileImageFileName);
-                        createOrUpdateUserProfileImage(req, studentProfileImagefile)
-                          .then(res.render("room", {
-                            user: req.user,
-                            requesting_users: requesting_users,
-                            contents: contents,
-                            room: foundRoom,
-                            contentImageSignedUrls: contentImageSignedUrls,
-                            accessStatus: ACCESS_GRANTED
-                          }))
-                          .catch((err) => console.log(err));
-                      });
-                });
+              .then((requesting_users) => {
+                getContentImageSignedUrls(contents)
+                  .then((contentImageSignedUrls) => {
+                    const studentProfileImageFileName = req.user._id + ".img";
+                    const studentProfileImagefile = studentProfileImagesBucket.file(studentProfileImageFileName);
+                    createOrUpdateUserProfileImage(req, studentProfileImagefile)
+                      .then(res.render("room", {
+                        user: req.user,
+                        requesting_users: requesting_users,
+                        contents: contents,
+                        room: foundRoom,
+                        contentImageSignedUrls: contentImageSignedUrls,
+                        accessStatus: ACCESS_GRANTED
+                      }))
+                      .catch((err) => console.log(err));
+                  });
+              });
           } else {
             getContentImageSignedUrls(contents)
-                .then((contentImageSignedUrls) => {
-                  const studentProfileImageFileName = req.user._id + ".img";
-                  const studentProfileImagefile = studentProfileImagesBucket.file(studentProfileImageFileName);
-                  createOrUpdateUserProfileImage(req, studentProfileImagefile)
-                    .then(res.render("room", {
-                      user: req.user,
-                      contents: contents,
-                      requesting_users: undefined,
-                      room: foundRoom,
-                      contentImageSignedUrls: contentImageSignedUrls,
-                      accessStatus: ACCESS_GRANTED
-                    }))
-                    .catch((err) => console.log(err));
-                });
+              .then((contentImageSignedUrls) => {
+                const studentProfileImageFileName = req.user._id + ".img";
+                const studentProfileImagefile = studentProfileImagesBucket.file(studentProfileImageFileName);
+                createOrUpdateUserProfileImage(req, studentProfileImagefile)
+                  .then(res.render("room", {
+                    user: req.user,
+                    contents: contents,
+                    requesting_users: undefined,
+                    room: foundRoom,
+                    contentImageSignedUrls: contentImageSignedUrls,
+                    accessStatus: ACCESS_GRANTED
+                  }))
+                  .catch((err) => console.log(err));
+              });
           }
+        } else if (foundRoom.accessRequests.includes(req.user._id)) {
+          res.render("room", {
+            user: req.user,
+            room: foundRoom,
+            accessStatus: ACCESS_REQUESTED
+          });
+        } else {
+          res.render("room", {
+            user: req.user,
+            room: foundRoom,
+            accessStatus: ACCESS_DENIED
+          });
         }
-        else if (foundRoom.accessRequests.includes(req.user._id)) {
-          res.render("room", {user: req.user, room: foundRoom, accessStatus: ACCESS_REQUESTED});
-        }
-        else {
-          res.render("room", {user: req.user, room: foundRoom, accessStatus: ACCESS_DENIED});
-        }
-      }
-      else {
+      } else {
         getContentImageSignedUrls(contents)
-            .then((contentImageSignedUrls) => {
-              const studentProfileImageFileName = req.user._id + ".img";
-              const studentProfileImagefile = studentProfileImagesBucket.file(studentProfileImageFileName);
-              createOrUpdateUserProfileImage(req, studentProfileImagefile)
-                .then(res.render("room", {
-                  user: req.user,
-                  contents: contents,
-                  requesting_users: undefined,
-                  room: foundRoom,
-                  contentImageSignedUrls: contentImageSignedUrls,
-                  accessStatus: ACCESS_GRANTED
-                }))
-                .catch((err) => console.log(err));
-            });
+          .then((contentImageSignedUrls) => {
+            const studentProfileImageFileName = req.user._id + ".img";
+            const studentProfileImagefile = studentProfileImagesBucket.file(studentProfileImageFileName);
+            createOrUpdateUserProfileImage(req, studentProfileImagefile)
+              .then(res.render("room", {
+                user: req.user,
+                contents: contents,
+                requesting_users: undefined,
+                room: foundRoom,
+                contentImageSignedUrls: contentImageSignedUrls,
+                accessStatus: ACCESS_GRANTED
+              }))
+              .catch((err) => console.log(err));
+          });
       }
     });
   });
@@ -511,9 +521,9 @@ router.get("/room/:roomId", function(req, res) {
 async function pushUsersIdsToList(foundRoom) {
   const promises = [];
   const accessRequests = foundRoom.accessRequests;
-  for (var i = 0;i < accessRequests.length;i++) {
-      const User = new mongoose.model("User", userSchema);
-      promises.push(User.findById(accessRequests[i]));
+  for (var i = 0; i < accessRequests.length; i++) {
+    const User = new mongoose.model("User", userSchema);
+    promises.push(User.findById(accessRequests[i]));
   }
   const requesting_users = await Promise.all(promises);
   return requesting_users;
@@ -521,7 +531,13 @@ async function pushUsersIdsToList(foundRoom) {
 
 router.post("/requestAccess", function(req, res) {
   const roomId = req.body.roomId;
-  Room.findOneAndUpdate({_id: roomId}, {$push: {accessRequests: req.user._id}}, function(err, foundRoom) {
+  Room.findOneAndUpdate({
+    _id: roomId
+  }, {
+    $push: {
+      accessRequests: req.user._id
+    }
+  }, function(err, foundRoom) {
     if (err) {
       console.log(err);
       return;
@@ -572,7 +588,16 @@ router.post("/acceptRequestAccess", function(req, res) {
   const roomId = mongoose.Types.ObjectId(req.body.roomId);
   // Remove requesterId from Room.accessRequests
   // Add requesterId to listOfStudents
-  Room.findOneAndUpdate({_id: roomId}, {$pull: {accessRequests: requesterId}, $push: {listOfStudents: requesterId}}, function(err, foundRoom) {
+  Room.findOneAndUpdate({
+    _id: roomId
+  }, {
+    $pull: {
+      accessRequests: requesterId
+    },
+    $push: {
+      listOfStudents: requesterId
+    }
+  }, function(err, foundRoom) {
     if (err) {
       console.log(err);
       return;
@@ -585,7 +610,13 @@ router.post("/denyRequestAccess", function(req, res) {
   const requesterId = mongoose.Types.ObjectId(req.body.requesterId);
   const roomId = mongoose.Types.ObjectId(req.body.roomId);
   // Add requesterId to listOfStudents
-  Room.findOneAndUpdate({_id: roomId}, {$pull: {accessRequests: requesterId}}, function(err, foundRoom) {
+  Room.findOneAndUpdate({
+    _id: roomId
+  }, {
+    $pull: {
+      accessRequests: requesterId
+    }
+  }, function(err, foundRoom) {
     if (err) {
       console.log(err);
       return;
