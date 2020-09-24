@@ -17,25 +17,38 @@ const upload = multer({
   dest: '../uploadedImage'
 });
 
-// Room types.
-const PUBLIC = "public";
-const PRIVATE = "private";
-
-// Room access status.
-const ACCESS_GRANTED = "granted";
-const ACCESS_DENIED = "denied";
-const ACCESS_REQUESTED = "requested";
-
 // Authenticate google cloud storage client and create bucket.
-const projectId = 'dkitinterhub'
-const keyFilename = './DkitInterHub-18ea7da7837a.json'
+const projectId = 'dkitinterhub';
+const keyFilename = './DkitInterHub-18ea7da7837a.json';
 const storage = new Storage({
   projectId,
   keyFilename
 });
-const studentProfileImagesBucket = storage.bucket('studentinterhub_userprofileimages');
-const roomImagesBucket = storage.bucket('studentinterhub_roomimages');
-const contentImagesBucket = storage.bucket('studentinterhub_contentimages');
+
+// Room types.
+const ROOM_TYPE = {
+  PUBLIC: "public",
+  PRIVATE: "private"
+}
+
+// Room access status.
+const ROOM_ACCESS_STATUS = {
+  GRANTED: "granted",
+  DENIED: "denied",
+  REQUESTED: "requested"
+}
+
+const STORAGE = {
+  CONFIG: {
+    action: "read",
+    expires: '12-31-9999'
+  },
+  BUCKET: {
+    USER_PROFILE_IMAGE: storage.bucket('studentinterhub_userprofileimages'),
+    ROOM_IMAGE: storage.bucket('studentinterhub_roomimages'),
+    CONTENT_IMAGE: storage.bucket('studentinterhub_contentimages')
+  }
+}
 
 // Setup server requests and responses on different routes.
 router.get("/", function(req, res) {
@@ -71,12 +84,14 @@ router.get("/dashboard", function(req, res) {
   }
 });
 
-async function getContentImageSignedUrls(foundContents) {
+async function getUserProfileImagesSignedUrl(foundUsers, config) {
+  const file = await STORAGE.BUCKET.USER_PROFILE_IMAGE.file(req.user._id + ".img");
+  const url = await file.getSignedUrl(config);
+  return url;
+}
+
+async function getContentImageSignedUrls(foundContents, config) {
   const promises = [];
-  const config = {
-    action: "read",
-    expires: '12-31-9999'
-  }
   for (var i = 0;i < foundContents.length;i ++) {
     if (foundContents[i].hasImage) {
       const contentImageFileName = foundContents[i]._id + ".img";
@@ -158,30 +173,6 @@ router.post("/userProfileImage", upload.single('userProfileImage'), function(req
     res.redirect("/");
   });
 });
-
-async function createOrUpdateUserProfileImage(req, file) {
-  const config = {
-    action: "read",
-    expires: '12-31-9999'
-  }
-  const User = new mongoose.model("User", userSchema);
-  await file.getSignedUrl(config, function(err, url) {
-    if (err) {
-      console.error(err);
-      return;
-    }
-    User.findOneAndUpdate({
-      _id: req.user._id
-    }, {
-      imageUrl: url
-    }, function(err, foundUser) {
-      if (err) {
-        console.log(err);
-        return;
-      }
-    });
-  });
-}
 
 router.get("/userProfileInput", function(req, res) {
   res.render("userProfileInput");
@@ -394,7 +385,7 @@ router.post("/roomnameAvailabilityChecker", function(req, res) {
     if (err) {
       console.log(err);
       return;
-    } else if (foundRooms.length == 0) {
+    } else if (!foundRooms) {
       res.send("Room name is available!");
     } else {
       res.send("Room name not available!");
