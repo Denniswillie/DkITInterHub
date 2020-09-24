@@ -29,5 +29,9 @@
     "passport-outlook": "^2.2.1",
     "path": "^0.12.7",
     "request": "^2.88.2"
+  },
+  "devDependencies": {
+    "babel-preset-stage-0": "^6.24.1",
+    "babel-preset-stage-3": "^6.24.1"
   }
 }
