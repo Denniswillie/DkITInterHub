@@ -392,7 +392,7 @@ router.post("/createRoom", function(req, res) {
   const description = req.body.description;
   const type = req.body.roomType;
   var listOfStudents;
-  if (type == PRIVATE) {
+  if (type == ROOM_TYPE.PRIVATE) {
     if (req.body.selectedFriends != undefined) {
       listOfStudents = req.body.selectedFriends.map(function(e) {
         return mongoose.Types.ObjectId(e);
@@ -401,39 +401,36 @@ router.post("/createRoom", function(req, res) {
     } else {
       listOfStudents = [req.user._id];
     }
-    const User = new mongoose.model("User", userSchema);
-    Room.create({
-      creatorId: req.user._id,
-      name: name,
-      description: description,
-      listOfStudents: listOfStudents,
-      type: type
-    }, function(err, createdRoom) {
-      if (err) {
-        console.log(err);
-        return;
-      }
-      res.redirect("/room/" + createdRoom._id);
-    });
+    createRoom(req, res, name, description, listOfStudents, ROOM_TYPE.PRIVATE);
   } else {
-    Room.create({
-      creatorId: req.user._id,
-      name: name,
-      description: description,
-      type: type
-    }, function(err, createdRoom) {
-      if (err) {
-        console.log(err);
-        return;
-      }
-      res.redirect("/room/" + createdRoom._id);
-    });
+    listOfStudents = []; // All students are permitted to enter this room, hence no student is specified.
+    createRoom(req, res, name, description, listOfStudents, ROOM_TYPE.PUBLIC);
   }
 });
+
+async function createRoom(req, res, name, description, listOfStudents, type) {
+  Room.create({
+    creatorId: req.user._id,
+    name: name,
+    description: description,
+    listOfStudents: listOfStudents,
+    type: type
+  }, function(err, createdRoom) {
+    if (err) {
+      console.log(err);
+      return;
+    }
+    res.redirect("/room/" + createdRoom._id);
+  });
+}
 
 router.get("/room", function(req, res) {
   res.redirect("/rooms");
 });
+
+// router.get("/rooms", function(req, res) {
+//
+// });
 
 router.get("/room/:roomId", function(req, res) {
   const roomId = mongoose.Types.ObjectId(req.params.roomId);
@@ -448,40 +445,37 @@ router.get("/room/:roomId", function(req, res) {
         res.status(404).send("Room is not found.");
       } else if (foundRoom.type == PRIVATE) {
         if (foundRoom.listOfStudents.includes(req.user._id)) {
-          if (String(req.user._id) == String(foundRoom.creatorId)) {
-            pushUsersIdsToList(foundRoom)
+          if (String(req.user._id) === String(foundRoom.creatorId)) {
+            getRequestingUsersList(foundRoom)
               .then((requesting_users) => {
                 getContentImageSignedUrls(contents)
                   .then((contentImageSignedUrls) => {
-                    const studentProfileImageFileName = req.user._id + ".img";
-                    const studentProfileImagefile = studentProfileImagesBucket.file(studentProfileImageFileName);
-                    createOrUpdateUserProfileImage(req, studentProfileImagefile)
-                      .then(res.render("room", {
-                        user: req.user,
-                        requesting_users: requesting_users,
-                        contents: contents,
-                        room: foundRoom,
-                        contentImageSignedUrls: contentImageSignedUrls,
-                        accessStatus: ACCESS_GRANTED
-                      }))
-                      .catch((err) => console.log(err));
+                    getUserProfileImagesSignedUrl(req)
+                      .then((userProfileImageSignedUrl) => {
+                        res.render("room", {
+                          user: req.user,
+                          requesting_users: requesting_users,
+                          contents: contents,
+                          room: foundRoom,
+                          contentImageSignedUrls: contentImageSignedUrls,
+                          accessStatus: ACCESS_GRANTED
+                        })
+                      })
                   });
               });
           } else {
             getContentImageSignedUrls(contents)
               .then((contentImageSignedUrls) => {
-                const studentProfileImageFileName = req.user._id + ".img";
-                const studentProfileImagefile = studentProfileImagesBucket.file(studentProfileImageFileName);
-                createOrUpdateUserProfileImage(req, studentProfileImagefile)
-                  .then(res.render("room", {
-                    user: req.user,
-                    contents: contents,
-                    requesting_users: undefined,
-                    room: foundRoom,
-                    contentImageSignedUrls: contentImageSignedUrls,
-                    accessStatus: ACCESS_GRANTED
-                  }))
-                  .catch((err) => console.log(err));
+                getUserProfileImagesSignedUrl(req)
+                  .then((userProfileImageSignedUrl) => {
+                    res.render("room", {
+                      contents: contents,
+                      requesting_users: undefined,
+                      room: foundRoom,
+                      contentImageSignedUrls: contentImageSignedUrls,
+                      accessStatus: ACCESS_GRANTED
+                    })
+                  })
               });
           }
         } else if (foundRoom.accessRequests.includes(req.user._id)) {
@@ -500,25 +494,23 @@ router.get("/room/:roomId", function(req, res) {
       } else {
         getContentImageSignedUrls(contents)
           .then((contentImageSignedUrls) => {
-            const studentProfileImageFileName = req.user._id + ".img";
-            const studentProfileImagefile = studentProfileImagesBucket.file(studentProfileImageFileName);
-            createOrUpdateUserProfileImage(req, studentProfileImagefile)
-              .then(res.render("room", {
+            getUserProfileImagesSignedUrl(req)
+              .then((userProfileImageSignedUrl) => {
                 user: req.user,
                 contents: contents,
                 requesting_users: undefined,
                 room: foundRoom,
                 contentImageSignedUrls: contentImageSignedUrls,
                 accessStatus: ACCESS_GRANTED
-              }))
-              .catch((err) => console.log(err));
+              })
           });
       }
     });
   });
 });
 
-async function pushUsersIdsToList(foundRoom) {
+//
+async function getRequestingUsersList(foundRoom) {
   const promises = [];
   const accessRequests = foundRoom.accessRequests;
   for (var i = 0; i < accessRequests.length; i++) {
