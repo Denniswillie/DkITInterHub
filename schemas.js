@@ -22,18 +22,6 @@ const roomSchema = new mongoose.Schema({
   imageUrl: String
 });
 
-const userSchema = new mongoose.Schema({
-  username: String,
-  googleId: String,
-  outlookId: String,
-  facebookId: String,
-  name: String,
-  country: String,
-  phoneNumber: String,
-  course: String,
-  imageUrl: String
-});
-
 module.exports.userSchema = userSchema;
 module.exports.contentSchema= contentSchema;
 module.exports.roomSchema = roomSchema;

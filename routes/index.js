@@ -17,14 +17,6 @@ const upload = multer({
   dest: '../uploadedImage'
 });
 
-// Authenticate google cloud storage client and create bucket.
-const projectId = 'dkitinterhub';
-const keyFilename = './DkitInterHub-18ea7da7837a.json';
-const storage = new Storage({
-  projectId,
-  keyFilename
-});
-
 // Room types.
 const ROOM_TYPE = {
   PUBLIC: "public",
@@ -36,32 +28,6 @@ const ROOM_ACCESS_STATUS = {
   GRANTED: "granted",
   DENIED: "denied",
   REQUESTED: "requested"
-}
-
-const STORAGE = {
-  CONFIG: {
-    action: "read",
-    expires: '12-31-9999'
-  },
-  BUCKET: {
-    USER_PROFILE_IMAGE: storage.bucket('studentinterhub_userprofileimages'),
-    ROOM_IMAGE: storage.bucket('studentinterhub_roomimages'),
-    CONTENT_IMAGE: storage.bucket('studentinterhub_contentimages')
-  }
-}
-
-const options = {
-  destination: destination,
-  resumable: true,
-  validation: 'crc32c'
-};
-
-function getOptions(destination) {
-  return {
-    destination: destination,
-    resumable: true,
-    validation: 'crc32c'
-  };
 }
 
 // Setup server requests and responses on different routes.
@@ -99,12 +65,6 @@ router.get("/dashboard", function(req, res) {
     res.redirect("/login");
   }
 });
-
-async function getUserProfileImagesSignedUrl(req) {
-  const file = await STORAGE.BUCKET.USER_PROFILE_IMAGE.file(req.user._id + ".img");
-  const url = await file.getSignedUrl(STOGAGE.CONFIG);
-  return url;
-}
 
 async function getContentImageSignedUrls(foundContents) {
   const promises = [];
@@ -279,6 +239,8 @@ router.post("/existingUsers", function(req, res) {
 async function findUserThatHasMatchingUsername(req) {
   return new Promise(function(resolve) {
       const User = new mongoose.model("User", userSchema);
+
+      // Find another user's (other than the user him/herself) username
       User.findOne({
         $and: [{
             username: req.body.inputElement
