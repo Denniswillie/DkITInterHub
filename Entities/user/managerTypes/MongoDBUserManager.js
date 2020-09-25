@@ -63,7 +63,30 @@ class MongoDBUserManager {
   */
   static async getExistingUsersWithStartingLetters(
       startingLetters, matchedUser, ownUsername) {
-    
+    User.find({
+      $and: [
+        {
+          username: {
+            $regex: "^" + startingLetters,
+            $options: "i"
+          }
+        },
+        {
+          username: {
+            $not: {
+              $eq: ownUsername
+            }
+          }
+        },
+        {
+          username: {
+            $not: {
+              $eq: 
+            }
+          }
+        }
+      ]
+    })
   }
 }
 
