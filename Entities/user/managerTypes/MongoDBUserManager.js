@@ -56,6 +56,14 @@ class MongoDBUserManager {
     });
   }
 
+  static async getExistingUser(searchedUsername, ownUsername) {
+    const User = new mongoose.model("User", this.USER_SCHEMA;
+    User
+        .findOne({username: searchedUsername})
+        .where('username').ne(ownUsername)
+        .
+  }
+
   /**
   * This function has to make sure that the result put the matched username
   * in the front of the foundUsers list and doesn't include the requester
@@ -81,7 +89,7 @@ class MongoDBUserManager {
         {
           username: {
             $not: {
-              $eq: 
+              $eq:
             }
           }
         }
