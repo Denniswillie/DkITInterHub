@@ -1,17 +1,20 @@
 "use strict";
 // jshint esversion:6
 
-const GoogleFileStorageManager =
-  require("../../../fileStorage/managerTypes/GoogleFileStorageManager");
 const mongoose = require("mongoose");
 const ObjectId = require("mongodb").ObjectID;
 
 /**
  * This class is responsible for handling user's data in the database
- * for RUD operations. Creating users won't be necessary here since
+ * for RUD operations. Create operations won't be necessary here since
  * it is done in the authentication system.
  */
 class MongoDBUserManager {
+
+  constructor(user) {
+    this._user = user;
+  }
+
   static USER_SCHEMA = new mongoose.Schema({
     username: String,
     googleId: String,
@@ -20,81 +23,51 @@ class MongoDBUserManager {
     name: String,
     country: String,
     phoneNumber: String,
-    course: String,
-    imageUrl: String
+    course: String
   });
+
+  const User = new mongoose.model("User", this.USER_SCHEMA);
 
   static USERNAME_AVAILABILITY = {
     AVAILABLE: "username is available!",
     UNAVAILABLE: "username is unavailable"
   }
 
-  static async getExistingUser(searchedUsername, ownUsername) {
-    const User = new mongoose.model("User", this.USER_SCHEMA;
-    User.findOne({
-      $and: [
-        {
-          username: {
-            $regex: "^" + searchedUsername + "$",
-            $options: "i"
-          }
-        },
-        {
-          username: {
-            $not: {
-              $eq: ownUsername
-            }
-          }
-        }
-      ]
-    }, function(err, foundUser) {
-      if (err) {
-        console.log(err);
-        return;
-      }
-      return foundUser;
-    });
+  static USER_PROPERTY = {
+    USERNAME: 'username',
+    NAME: 'name',
+    COUNTRY: 'country',
+    PHONE_NUMBER: 'phoneNumber',
+    COURSE: 'course'
   }
 
-  static async getExistingUser(searchedUsername, ownUsername) {
-    const User = new mongoose.model("User", this.USER_SCHEMA;
-    User
-        .findOne({username: searchedUsername})
-        .where('username').ne(ownUsername)
-        .
+  getUserWithSpecifiedUsername(searchedUsername) {
+    User.find({})
+        .where(this.USER_PROPERTY.USERNAME).regex('/^' + searchedUsername + '$/i')
+        .where(this.USER_PROPERTY.USERNAME).ne(this._user.username);
+        .limit(1)
+        .exec(function(err, foundUser) {
+          if (err) {
+            console.log(err);
+            return;
+          } else {
+            return foundUser;
+          }
+        });
   }
 
-  /**
-  * This function has to make sure that the result put the matched username
-  * in the front of the foundUsers list and doesn't include the requester
-  * username.
-  */
-  static async getExistingUsersWithStartingLetters(
-      startingLetters, matchedUser, ownUsername) {
-    User.find({
-      $and: [
-        {
-          username: {
-            $regex: "^" + startingLetters,
-            $options: "i"
+  getUsersWithStartingLetters(startingLetters) {
+    User.find({})
+        .where(this.USER_PROPERTY.USERNAME).regex('/^' + startingLetters + '/i')
+        .where(this.USER_PROPERTY.USERNAME).ne(this._user.username)
+        .exec(function(err, foundUsers) {
+          if (err) {
+            console.log(err);
+            return;
+          } else {
+            return foundUsers;
           }
-        },
-        {
-          username: {
-            $not: {
-              $eq: ownUsername
-            }
-          }
-        },
-        {
-          username: {
-            $not: {
-              $eq:
-            }
-          }
-        }
-      ]
-    })
+        });
   }
 }
 
