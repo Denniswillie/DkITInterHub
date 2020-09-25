@@ -32,16 +32,38 @@ class MongoDBUserManager {
   static async getExistingUser(searchedUsername, ownUsername) {
     const User = new mongoose.model("User", this.USER_SCHEMA;
     User.findOne({
-      username: {
-        $regex: "^" + username + "$",
-        $options: "i"
-      }, function(err, foundUser) {
-        if (err) {
-          console.log(err);
-          return;
+      $and: [
+        {
+          username: {
+            $regex: "^" + searchedUsername + "$",
+            $options: "i"
+          }
+        },
+        {
+          username: {
+            $not: {
+              $eq: ownUsername
+            }
+          }
         }
-        return foundUser;
-      })
+      ]
+    }, function(err, foundUser) {
+      if (err) {
+        console.log(err);
+        return;
+      }
+      return foundUser;
+    });
+  }
+
+  /**
+  * This function has to make sure that the result put the matched username
+  * in the front of the foundUsers list and doesn't include the requester
+  * username.
+  */
+  static async getExistingUsersWithStartingLetters(
+      startingLetters, matchedUser, ownUsername) {
+    
   }
 }
 
