@@ -350,22 +350,6 @@ router.post("/createRoom", function(req, res) {
   }
 });
 
-async function createRoom(req, res, name, description, listOfStudents, type) {
-  Room.create({
-    creatorId: req.user._id,
-    name: name,
-    description: description,
-    listOfStudents: listOfStudents,
-    type: type
-  }, function(err, createdRoom) {
-    if (err) {
-      console.log(err);
-      return;
-    }
-    res.redirect("/room/" + createdRoom._id);
-  });
-}
-
 router.get("/room", function(req, res) {
   res.redirect("/rooms");
 });

@@ -5,9 +5,8 @@ const mongoose = require("mongoose");
 const ObjectId = require("mongodb").ObjectID;
 
 /**
- * This class is responsible for handling user's data in the database
- * for RUD operations. Create operations won't be necessary here since
- * it is done in the authentication system.
+ * This class is responsible for handling contents data in the database
+ * for CRUD operations.
  */
 class MongoDBContentManager {
 
@@ -16,7 +15,6 @@ class MongoDBContentManager {
     creatorUsername: String,
     title: String,
     content:String,
-    hasImage: Boolean,
     timestamp: Number, // May cause errors in the future when timestamp exceeds number limits.
     roomId: ObjectId
   });
@@ -30,6 +28,24 @@ class MongoDBContentManager {
         return;
       } else {
         return foundContents;
+      }
+    })
+  }
+
+  static async createContent(contentObject) {
+    Content.create({
+      creatorId: contentObject.creatorId,
+      creatorUsername: contentObject.creatorUsername,
+      title: contentObject.title,
+      content: contentObject.content,
+      timestamp: contentObject.timestamp,
+      roomId: contentObject.roomId
+    }, function(err, createdContent) {
+      if (err) {
+        console.log(err);
+        return;
+      } else {
+        return createdContent;
       }
     })
   }

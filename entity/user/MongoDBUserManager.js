@@ -28,18 +28,10 @@ class MongoDBUserManager {
     UNAVAILABLE: "username is unavailable"
   }
 
-  static USER_PROPERTY = {
-    USERNAME: 'username',
-    NAME: 'name',
-    COUNTRY: 'country',
-    PHONE_NUMBER: 'phoneNumber',
-    COURSE: 'course'
-  }
-
   static async getUserWithSpecifiedUsername(searchedUsername) {
     User.find({})
-        .where(this.USER_PROPERTY.USERNAME).regex('/^' + searchedUsername + '$/i')
-        .where(this.USER_PROPERTY.USERNAME).ne(this._user.username);
+        .where('username').regex('/^' + searchedUsername + '$/i')
+        .where('username').ne(this._user.username);
         .limit(1)
         .exec(function(err, foundUser) {
           if (err) {
@@ -53,8 +45,8 @@ class MongoDBUserManager {
 
   static async getUsersWithStartingLetters(startingLetters) {
     User.find({})
-        .where(this.USER_PROPERTY.USERNAME).regex('/^' + startingLetters + '/i')
-        .where(this.USER_PROPERTY.USERNAME).ne(this._user.username)
+        .where('username').regex('/^' + startingLetters + '/i')
+        .where('username').ne(this._user.username)
         .exec(function(err, foundUsers) {
           if (err) {
             console.log(err);
