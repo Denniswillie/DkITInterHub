@@ -6,8 +6,7 @@ const ObjectId = require("mongodb").ObjectID;
 
 /**
  * This class is responsible for handling user's data in the database
- * for RUD operations. Create operations won't be necessary here since
- * it is done in the authentication system.
+ * for CRUD operations.
  */
 class MongoDBUserManager {
 
