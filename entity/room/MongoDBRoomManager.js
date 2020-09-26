@@ -4,7 +4,7 @@
 const mongoose = require("mongoose");
 const ObjectId = require("mongodb").ObjectID;
 const RoomClass = require("./Room");
-const userSchema =
+const userSchema = require("../user/MongoDBUserManager").USER_SCHEMA;
 
   /**
    * This class is responsible for handling rooms data in the database
