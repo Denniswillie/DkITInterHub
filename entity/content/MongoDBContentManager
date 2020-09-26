@@ -1,0 +1,39 @@
+"use strict";
+// jshint esversion:6
+
+const mongoose = require("mongoose");
+const ObjectId = require("mongodb").ObjectID;
+
+/**
+ * This class is responsible for handling user's data in the database
+ * for RUD operations. Create operations won't be necessary here since
+ * it is done in the authentication system.
+ */
+class MongoDBContentManager {
+
+  static CONTENT_SCHEMA = new mongoose.Schema({
+    creatorId: ObjectId,
+    creatorUsername: String,
+    title: String,
+    content:String,
+    hasImage: Boolean,
+    timestamp: Number, // May cause errors in the future when timestamp exceeds number limits.
+    roomId: ObjectId
+  });
+
+  const Content = new mongoose.model("Content", CONTENT_SCHEMA);
+
+  static async getContents(roomId) {
+    Content.find({roomId: String(roomId)}, function(err, foundContents) {
+      if (err) {
+        console.log(err);
+        return;
+      } else {
+        return foundContents;
+      }
+    })
+  }
+
+}
+
+module.exports = MongoDBContentManager;

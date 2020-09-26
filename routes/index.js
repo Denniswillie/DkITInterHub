@@ -96,8 +96,7 @@ router.post("/createContent", upload.single("contentImage"), function(req, res) 
     title: title,
     content: content,
     timestamp: Math.floor(Date.now() / 1000),
-    roomId: roomId,
-    hasImage: hasImage
+    roomId: roomId
   }, function(err, createdContent) {
     if (err) {
       console.log(err);
