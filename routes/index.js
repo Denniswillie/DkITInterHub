@@ -500,8 +500,6 @@ router.post("/requestAccess", function(req, res) {
 // });
 
 router.post("/acceptRequestAccess", function(req, res) {
-  console.log(req.body.requesterId);
-  console.log(req.body.roomId);
   const requesterId = mongoose.Types.ObjectId(req.body.requesterId);
   const roomId = mongoose.Types.ObjectId(req.body.roomId);
   // Remove requesterId from Room.accessRequests
