@@ -2,10 +2,6 @@ const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
 const passport = require("passport");
-const schemas = require("../schemas");
-const contentSchema = schemas.contentSchema;
-const ContentCard = new mongoose.model("ContentCard", contentSchema);
-const userSchema = schemas.userSchema;
 const roomSchema = schemas.roomSchema;
 const Room = new mongoose.model("Room", roomSchema);
 const authRoutes = require("../routes/auth");
@@ -65,21 +61,6 @@ router.get("/dashboard", function(req, res) {
     res.redirect("/login");
   }
 });
-
-async function getContentImageSignedUrls(foundContents) {
-  const promises = [];
-  for (var i = 0; i < foundContents.length; i++) {
-    if (foundContents[i].hasImage) {
-      const contentImageFileName = foundContents[i]._id + ".img";
-      const contentImageFile = await STORAGE.BUCKET.CONTENT_IMAGE.file(contentImageFileName);
-      promises.push(contentImageFile.getSignedUrl(STORAGE.CONFIG));
-    } else {
-      promises.push("");
-    }
-  }
-  const contentImageSignedUrls = await Promise.all(promises);
-  return contentImageSignedUrls;
-}
 
 router.get("/login", function(req, res) {
   if (req.isAuthenticated()) {

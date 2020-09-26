@@ -11,10 +11,6 @@ const ObjectId = require("mongodb").ObjectID;
  */
 class MongoDBUserManager {
 
-  constructor(user) {
-    this._user = user;
-  }
-
   static USER_SCHEMA = new mongoose.Schema({
     username: String,
     googleId: String,
@@ -41,7 +37,7 @@ class MongoDBUserManager {
     COURSE: 'course'
   }
 
-  getUserWithSpecifiedUsername(searchedUsername) {
+  static async getUserWithSpecifiedUsername(searchedUsername) {
     User.find({})
         .where(this.USER_PROPERTY.USERNAME).regex('/^' + searchedUsername + '$/i')
         .where(this.USER_PROPERTY.USERNAME).ne(this._user.username);
@@ -56,7 +52,7 @@ class MongoDBUserManager {
         });
   }
 
-  getUsersWithStartingLetters(startingLetters) {
+  static async getUsersWithStartingLetters(startingLetters) {
     User.find({})
         .where(this.USER_PROPERTY.USERNAME).regex('/^' + startingLetters + '/i')
         .where(this.USER_PROPERTY.USERNAME).ne(this._user.username)
