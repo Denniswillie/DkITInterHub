@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>InterHub</title>
+
+<!--
+
+Sentra Template
+
+https://templatemo.com/tm-518-sentra
+
+-->
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+        <link rel="stylesheet" href="css/bootstrap.min.css">
+        <link rel="stylesheet" href="css/bootstrap-theme.min.css">
+        <link rel="stylesheet" href="css/fontAwesome.css">
+        <link rel="stylesheet" href="css/light-box.css">
+        <link rel="stylesheet" href="css/owl-carousel.css">
+        <link rel="stylesheet" href="css/templatemo-style.css">
+        <!-- CSS only -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<!-- JS, Popper.js, and jQuery -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
+
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700,800" rel="stylesheet">
+
+        <script src="js/vendor/modernizr-2.8.3-respond-1.4.2.min.js"></script>
+    </head>
+
+<body>
+
+
+
+        <header class="nav-down responsive-nav hidden-lg hidden-md">
+            <button type="button" id="nav-toggle" class="navbar-toggle" data-toggle="collapse" data-target="#main-nav">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <!--/.navbar-header-->
+            <div id="main-nav" class="collapse navbar-collapse">
+                <nav>
+                    <ul class="nav navbar-nav">
+                        <li><a href="#top">Home</a></li>
+                        <li><a href="#team">Meet the team</a></li>
+                        <li><a href="#about">About</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </header>
+
+        <div class="sidebar-navigation hidden-sm hidden-xs">
+            <div class="logo">
+                <a href="#">Inter<em>Hub</em></a>
+            </div>
+            <nav>
+              <div class="circular--portrait hidden-sm hidden-xs" id = "userProfileImage"style = "margin:auto; overflow: hidden">
+                <img style = "width: 980px; height: 1292px;" src="<%= user.imageUrl %>" />
+              </div>
+              <br>
+              <h3 style="text-align: center;margin: auto;color: white;"><%= user.name %></h3>
+              <h4 style="text-align: center;margin: auto;color: white;"><%= user.username %></h5><br>
+              <h5 style="text-align: center;margin: auto;color: white;"><%= user.country %></h5>
+              <br><br>
+                <center><div style = "display: table;">
+                    <div style = "display: table-row;">
+                    <div class="accent-button button" style = "display: table-cell;">
+                        <a style = "color: white;" id = "logoutAnchor" onclick = "logout()">logout</a>
+                    </div>
+                    <div class="accent-button button" style = "display: table-cell;">
+                        <a style = "color: white;" id = "createRoomAnchor" onclick = "createRoom()">Create Room</a>
+                    </div>
+                    </div>
+                </div></center>
+            </nav>
+        </div>
+        <div class="page-content">
+          <section id="blog" class="content-section">
+            <div class="accent-button button" style = "text-align: left;">
+                <a href="/dashboard">Go to dashboard</a>
+            </div>
+            <br>
+            <div class="dropdown" style = "text-align: left;">
+              <input style = "text-align: left;width: 50%; font-size: 14px;background-color: white; color: black;left: 0;" type = "text" class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" placeholder="Search for rooms here.">
+              <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" id = "existingRooms" style = "width: 50%;font-size: 12px">
+              </div>
+            </div>
+              <br>
+              <div class="section-heading">
+                  <h1><em><%= room.name %></em></h1>
+                  <p><%= room.description %></p>
+              </div>
+              <% if (accessStatus == "granted") { %>
+              <div class="section-content">
+                  <div class="tabs-content">
+                      <div class="wrapper">
+                        <% if (requesting_users != undefined) { %>
+                        <section id="first-tab-group" class="tabgroup">
+                              <ul>
+                                  <li>
+                                      <div class="item">
+                                          <div class="text-content">
+                                              <h4>Access requests for this room:</h4>
+                                              <div style = "display: table;">
+                                                <% requesting_users.forEach(function(requesting_user) { %>
+                                                  <div style = "display: table-row;">
+                                                    <span style = "display: table-cell"><%= requesting_user.username %></span>
+                                                  </div>
+                                                  <div style = "display: table-row;">
+                                                  <div class="accent-button button" style = "display: table-cell;">
+                                                      <a onclick = "acceptRequestAccess(this.name, this.title)" name = "<%= room._id %>" title = "<%= requesting_user._id %>">Accept</a>
+                                                  </div>
+                                                  <div class="accent-button button" style = "display: table-cell;">
+                                                      <a onclick = "denyRequestAccess(this.name, this.value)" name = "<%= room._id %>" value = "<%= requesting_user._id %>">Deny</a>
+                                                  </div>
+                                                  </div>
+                                                <% }) %>
+                                              </div>
+                                          </div>
+                                      </div>
+                                  </li>
+                              </ul>
+                        </section>
+                        <br>
+                        <br>
+                        <% } %>
+                          <ul class="tabs clearfix" data-tabgroup="first-tab-group">
+                            <li><a href="#tab1" class="active">Public Contents</a></li>
+                            <li><a href="#tab2">My Contents</a></li>
+                          </ul>
+                          <section id="first-tab-group" class="tabgroup">
+                              <div id="tab1">
+                                  <ul>
+                                    <%  for (var i = 0;i < contents.length;i++) { %>
+                                      <li>
+                                          <div class="item">
+                                            <% if (contentImageSignedUrls[i] != "") { %>
+                                              <img src="<%= contentImageSignedUrls[i] %>" alt="">
+                                            <% } %>
+                                              <div class="text-content">
+                                                  <h4><%= contents[i].title %></h4>
+                                                  <span><%= contents[i].creatorUsername %></span>
+                                                  <p><%= contents[i].content %></p>
+                                                  <div class="accent-button button">
+                                                      <a href="#contact">Continue Reading</a>
+                                                  </div>
+                                              </div>
+                                          </div>
+                                      </li>
+                                    <%  } %>
+                                    <li>
+                                      <div style = "text-align: center;" class="accent-button button">
+                                          <a style = "color: white;" id = "createContentAnchor" onclick = "showCreateContent()">Create Content</a>
+                                      </div>
+                                    </li>
+                                  </ul>
+                              </div>
+                              <div id="tab2">
+                                  <ul>
+                                    <%  for (var i = 0;i < contents.length;i++) { %>
+                                      <% if (String(contents[i].creatorId) == String(user._id)) { %>
+                                      <li>
+                                          <div class="item">
+                                            <% if (contentImageSignedUrls[i] != "") { %>
+                                              <img src="<%= contentImageSignedUrls[i] %>" alt="">
+                                            <% } %>
+                                              <div class="text-content">
+                                                  <h4><%= contents[i].title %></h4>
+                                                  <span><%= contents[i].creatorUsername %></span>
+                                                  <p><%= contents[i].content %></p>
+                                                  <div class="accent-button button">
+                                                      <a href="#contact">Continue Reading</a>
+                                                  </div>
+                                              </div>
+                                          </div>
+                                      </li>
+                                      <%  } %>
+                                    <%  } %>
+                                    <li>
+                                      <div style = "text-align: center;" class="accent-button button">
+                                          <a style = "color: white" id = "createContentAnchor" onclick = "showCreateContent()">Create Content</a>
+                                      </div>
+                                    </li>
+                                  </ul>
+                              </div>
+                          </section>
+                      </div>
+                  </div>
+              </div>
+            <% } else if (accessStatus == "denied") {%>
+                  <div class="section-content">
+                      <div class="tabs-content">
+                          <div class="wrapper">
+                              <section id="first-tab-group" class="tabgroup">
+                                      <ul>
+                                        <li>
+                                          <center><h1>It seems that you don't have access to this room. Click the button below to request access.</h1></center>
+                                          <br>
+                                          <div style = "text-align: center;" class="accent-button button">
+                                              <a onclick = "requestAccess(this.name)" name = "<%= room._id %>" id = "requestAccessAnchor" style = "color: white">Request Access</a>
+                                          </div>
+                                        </li>
+                                      </ul>
+                              </section>
+                          </div>
+                      </div>
+                  </div>
+
+            <% } else {%>
+              <div class="section-content">
+                  <div class="tabs-content">
+                      <div class="wrapper">
+                          <section id="first-tab-group" class="tabgroup">
+                                  <ul>
+                                    <li>
+                                      <center><h1>You're request is sent to the room creator.</h1></center>
+                                    </li>
+                                  </ul>
+                              </section>
+                      </div>
+                  </div>
+              </div>
+            <% } %>
+          </section>
+        </div>
+
+        <div id="specialDiv" style = "visibility: hidden; padding-top: 1em;box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);text-align: center;width: 50%; height: 65%; background-color: white; position: absolute; top:0; bottom: 0; left: 0; right: 0; margin: auto; z-index: 1000000; border-radius: 25px">
+          <h1 style = "color: #45489a"><b>Create Content</b></h1>
+          <form action = "/createContent" method = "POST" enctype="multipart/form-data">
+            <div class="form-group" style = "font-size: 18px; margin-left: 2em; margin-right: 2em;">
+              <label>Title</label>
+              <input type="text" style = "font-size: 16px" name ="title" class="form-control" id="contentTitle"><br>
+              <label for="exampleFormControlTextarea1">What's on your mind, Dennis?</label>
+              <textarea class="form-control" id="exampleFormControlTextarea1" rows="3" style = "font-size: 16px; resize: none;" name = "content"></textarea>
+              <br>
+              <label for="">Upload a picture here for the content.</label>
+              <center><input type="file" name="contentImage"></center>
+              <input type = "text" value = "<%= room._id %>" name = "roomId" style = "visibility: hidden">
+              <input type="submit" name="" value="submit">
+            </div>
+          </form>
+        </div>
+
+        <div id="specialDiv2" style = "visibility: hidden; width: 100%; height: 100%; background-color: white; position: absolute; top:0; bottom: 0; left: 0; right: 0; margin: auto; z-index: 1000; opacity: 0.5">
+
+        </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.11.2.min.js"><\/script>')</script>
+
+    <script src="js/vendor/bootstrap.min.js"></script>
+
+    <script src="js/plugins.js"></script>
+    <script src="js/main.js"></script>
+
+    <script>
+      function logout() {
+        window.location.href = "/logout";
+      }
+
+      function createRoom() {
+        window.location.href = "/createRoom";
+      }
+
+      document.getElementById("createRoomAnchor").addEventListener("mouseover", function(e) {
+        this.style.color = "black";
+      });
+
+      document.getElementById("createRoomAnchor").addEventListener("mouseout", function(e) {
+        this.style.color = "white";
+      });
+        function acceptRequestAccess(roomId, requesterId) {
+          console.log(requesterId);
+          console.log(roomId);
+          const bodyParams = new URLSearchParams();
+          bodyParams.append("roomId", roomId);
+          bodyParams.append("requesterId", requesterId);
+          fetch("/acceptRequestAccess", {method: 'POST', body: bodyParams})
+              .then(() => {
+                window.location.href = "/room/" + roomId;
+              });
+        }
+
+        function denyRequestAccess(roomId, requesterId) {
+          const bodyParams = new URLSearchParams();
+          bodyParams.append("roomId", roomId);
+          bodyParams.append("requesterId", requesterId);
+          fetch("/denyRequestAccess", {method: 'POST', body: bodyParams})
+              .then(() => {
+                window.location.href = "/room/" + roomId;
+              });
+        }
+
+        function showCreateContent() {
+          document.getElementById("specialDiv2").style.marginTop = window.pageYOffset + "px";
+          document.getElementById("specialDiv2").style.visibility = "visible";
+          const marginTop = window.pageYOffset + (window.innerHeight / 4);
+          document.getElementById("specialDiv").style.marginTop = marginTop + "px";
+          document.getElementById("specialDiv").style.visibility = "visible";
+          document.body.style.overflow = "hidden";
+        }
+
+        document.getElementById("logoutAnchor").addEventListener("mouseover", function(e) {
+          this.style.color = "black";
+        });
+
+        document.getElementById("logoutAnchor").addEventListener("mouseout", function(e) {
+          this.style.color = "white";
+        });
+
+        const createContentAnchor = document.getElementById("createContentAnchor");
+        if (createContentAnchor != null) {
+          createContentAnchor.addEventListener("mouseover", function(e) {
+            this.style.color = "black";
+          });
+
+          createContentAnchor.addEventListener("mouseout", function(e) {
+            this.style.color = "white";
+          });
+        }
+
+        const requestAccessAnchor = document.getElementById("requestAccessAnchor");
+        if (requestAccessAnchor != null) {
+          requestAccessAnchor.addEventListener("mouseover", function(e) {
+            this.style.color = "black";
+          });
+
+          requestAccessAnchor.addEventListener("mouseout", function(e) {
+            this.style.color = "white";
+          });
+        }
+
+        function requestAccess(roomId) {
+          const bodyParams = new URLSearchParams();
+          bodyParams.append("roomId", roomId);
+          fetch("/requestAccess", {method: 'POST', body: bodyParams})
+              .then(() => {
+                window.location.href = "/room/" + roomId;
+              });
+        }
+
+        document.getElementById("specialDiv2").addEventListener("click", function(e) {
+          this.style.visibility = "hidden";
+          document.getElementById("specialDiv").style.visibility = "hidden";
+          document.body.style.overflow = "auto";
+        });
+        window.addEventListener("load", function(e) {
+          document.getElementById("userProfileImage").style.height = document.getElementById("userProfileImage").offsetWidth + "px";
+        });
+        window.addEventListener("resize", function(e) {
+          document.getElementById("userProfileImage").style.height = document.getElementById("userProfileImage").offsetWidth + "px";
+        });
+
+        document.getElementById("dropdownMenuButton").addEventListener("input", function(e) {
+          const inputValue = this.value;
+          const inputLength = inputValue.length;
+          if (inputLength == 0) {
+            removeAllChildElements(document.getElementById("existingRooms"));
+          } else {
+            const bodyParams = new URLSearchParams();
+            bodyParams.append("inputElement", inputValue);
+            fetch("/existingRooms", {method: 'POST', body: bodyParams})
+                .then((response) => response.json())
+                .then((existingRooms) => {
+                  const existingRoomsDiv = document.getElementById("existingRooms");
+                  removeAllChildElements(existingRoomsDiv);
+                  existingRooms.forEach(function(existingRoom) {
+                    const existingRoomAnchor = document.createElement("a");
+                    existingRoomAnchor.style.width = "100%";
+                    existingRoomAnchor.classList.add("dropdown-item");
+                    existingRoomAnchor.innerHTML =
+                        "<b>" + existingRoom.name.substring(0, inputLength) + "</b>" + existingRoom.name.substring(inputLength);
+                    existingRoomAnchor.setAttribute("id", existingRoom._id);
+                    existingRoomAnchor.href = "/room/" + existingRoom._id;
+                    existingRoomsDiv.appendChild(existingRoomAnchor);
+                  });
+                });
+            }
+        });
+
+        function removeAllChildElements(parentDiv) {
+          while (parentDiv.firstChild) {
+            parentDiv.removeChild(parentDiv.lastChild);
+          };
+        }
+
+    </script>
+
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js" type="text/javascript"></script>
+
+</body>
+</html>

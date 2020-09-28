@@ -1,0 +1,50 @@
+<%- include('partials/header') %>
+<form action="/userProfileInput" method="post" enctype="multipart/form-data">
+<div class="container">
+  <div class="row">
+    <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
+      <div class="card card-signin my-5">
+        <div class="card-body">
+          <h5 class="card-title text-center">Please give us some of your info!</h5>
+          <div class="form-signin">
+            <label for="">Upload Profile Image</label>
+            <input type="file" name="userProfileImage">
+            <label>Enter username: </label>
+            <input type="text" name="username" id = "usernameInput" pattern="[^\s]+" title="No spaces allowed" minlength="6" autocomplete="off" required><br>
+            <input type="text" id = "userNameStatus" autocomplete="off" readonly><br>
+            <label>Enter course: </label>
+            <input type="text" name="course" required><br>
+            <label>Enter country</label>
+            <input type="text" name="country" required><br>
+            <input id = "submit" type="submit" value="submit" disabled>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</form>
+<script>
+  const USERNAME_IS_AVAILABLE = "Username is available!";
+  const usernameInput = document.getElementById("usernameInput");
+  usernameInput.addEventListener("input", function(e) {
+    if (usernameInput.value.length >= 6) {
+      const bodyParams = new URLSearchParams();
+      bodyParams.append("username", usernameInput.value);
+      fetch("/usernameAvailabilityChecker", {method: 'POST', body: bodyParams})
+          .then((response) => response.text())
+          .then((userNameStatus) => {
+            document.getElementById("userNameStatus").value = userNameStatus;
+            if (userNameStatus == USERNAME_IS_AVAILABLE) {
+              document.getElementById("submit").disabled = false;
+            } else {
+              document.getElementById("submit").disabled = true;
+            }
+          });
+    } else {
+      document.getElementById("userNameStatus").value = "username must be 6 characters or more";
+      document.getElementById("submit").disabled = true;
+    }
+  });
+</script>
+<%- include('partials/footer') %>
